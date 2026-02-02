@@ -175,3 +175,5 @@ exports.deleteCitizen = async (req, res) => {
     });
   }
 };
+
+

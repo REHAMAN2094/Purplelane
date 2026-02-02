@@ -8,6 +8,9 @@ app.use(express.json());
 app.use("/api/admin", require("./routes/admin.routes"));
 app.use("/api/citizens", require("./routes/citizen.routes"));
 
+app.use("/api/schemes", require("./routes/scheme.routes"));
+
+
 
 // (uncomment later when ready)
 // app.use("/api/applications", require("./routes/application.routes"));
