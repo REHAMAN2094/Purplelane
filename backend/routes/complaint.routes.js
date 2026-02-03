@@ -1,24 +1,55 @@
 const express = require("express");
 const router = express.Router();
-const Complaint = require("../models/Complaint");
 
-router.post("/", async (req, res) => {
-  const complaint = await Complaint.create(req.body);
-  res.json(complaint);
-});
+const authenticate = require("../middleware/authenticate");
+const authorize = require("../middleware/authorize");
+const upload = require("../middleware/uploadImage");
 
-router.get("/:id", async (req, res) => {
-  res.json(await Complaint.findById(req.params.id));
-});
+const {
+  createComplaint,
+  getComplaintById,
+  getComplaintImage,
+  getAllComplaints
+} = require("../controllers/complaint.controller");
 
-router.put("/:id/status", async (req, res) => {
-  res.json(
-    await Complaint.findByIdAndUpdate(
-      req.params.id,
-      { status: req.body.status },
-      { new: true }
-    )
-  );
-});
+// create complaint (Citizen)
+router.post(
+  "/",
+  authenticate,
+  authorize("Citizen"),
+  upload.array("attachments", 3),
+  createComplaint
+);
+
+// get complaint details
+router.get(
+  "/:id",
+  authenticate,
+  authorize("Citizen", "Employee", "Admin"),
+  getComplaintById
+);
+
+// get complaint image
+router.get(
+  "/:id/image",
+  authenticate,
+  authorize("Citizen", "Employee", "Admin"),
+  getComplaintImage
+);
+
+router.get(
+  "/:id/image/:index",
+  authenticate,
+  authorize("Citizen", "Employee", "Admin"),
+  getComplaintImage
+);
+ 
+router.get(
+  "/",
+  authenticate,
+  authorize("Citizen", "Employee", "Admin"),
+  getAllComplaints
+);
+
 
 module.exports = router;
