@@ -84,3 +84,21 @@ exports.createEmployee = async (req, res) => {
     });
   }
 };
+
+exports.updateServiceStatus = async (req, res) => {
+  if (req.user.role !== "Employee") {
+    return res.status(403).json({ message: "Employee only" });
+  }
+
+  const application = await ServiceApplication.findByIdAndUpdate(
+    req.params.id,
+    {
+      status: req.body.status,
+      remarks: req.body.remarks,
+      verified_by: req.user.id
+    },
+    { new: true }
+  );
+
+  res.json(application);
+};

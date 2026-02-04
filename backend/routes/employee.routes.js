@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Employee = require("../models/Employee");
+const {updateServiceStatus} = require("../controllers/employee.controller");
 
 router.post("/", async (req, res) => {
   res.json(await Employee.create(req.body));
@@ -19,5 +20,7 @@ router.put("/:id", async (req, res) => {
     await Employee.findByIdAndUpdate(req.params.id, req.body, { new: true })
   );
 });
+
+router.put("/applicationn/verify",updateServiceStatus )
 
 module.exports = router;

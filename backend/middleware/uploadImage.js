@@ -12,11 +12,12 @@ const upload = multer({
     if (
       file.mimetype === "image/jpeg" ||
       file.mimetype === "image/png" ||
-      file.mimetype === "image/jpg"
+      file.mimetype === "image/jpg"||
+      file.mimetype === "application/pdf"
     ) {
       cb(null, true);
     } else {
-      cb(new Error("Only image files allowed"), false);
+      cb(new Error("Only image and PDF  files allowed"), false);
     }
   }
 });

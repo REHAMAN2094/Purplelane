@@ -6,7 +6,8 @@ const {
   getAllCitizens,
   getCitizenById,
   updateCitizen,
-  deleteCitizen
+  deleteCitizen,
+  applyService
 } = require("../controllers/citizen.controller");
 
 // register citizen
@@ -23,5 +24,7 @@ router.put("/:id", updateCitizen);
 
 // delete citizen
 router.delete("/:id", deleteCitizen);
+
+router.post("/apply-service", applyService );
 
 module.exports = router;

@@ -37,3 +37,15 @@ exports.createAdmin = async (req, res) => {
   }
 };
 
+exports.createService = async (req, res) => {
+  if (req.user.role !== "Admin") {
+    return res.status(403).json({ message: "Admin only" });
+  }
+
+  const service = await Service.create({
+    ...req.body,
+    created_by: req.user.id
+  });
+
+  res.status(201).json(service);
+};

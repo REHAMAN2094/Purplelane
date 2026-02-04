@@ -177,3 +177,13 @@ exports.deleteCitizen = async (req, res) => {
 };
 
 
+exports.applyService = async (req, res) => {
+  const application = await ServiceApplication.create({
+    service_id: req.body.service_id,
+    citizen_id: req.user.id,
+    form_data: req.body.form_data,
+    application_no: "APP" + Date.now()
+  });
+
+  res.status(201).json(application);
+};

@@ -102,3 +102,138 @@ exports.getSchemeById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const SchemeApplication = require("../models/SchemeApplication");
+
+/**
+ * CITIZEN → APPLY FOR SCHEME
+ */
+
+
+exports.applyScheme = async (req, res) => {
+  try {
+    if (req.user.role !== "Citizen") {
+      return res.status(403).json({ message: "Only citizens can apply" });
+    }
+
+    const { scheme_id } = req.body;
+
+    // prevent duplicate application
+    const alreadyApplied = await SchemeApplication.findOne({
+      scheme_id,
+      citizen_id: req.user.id
+    });
+
+    if (alreadyApplied) {
+      return res.status(400).json({
+        message: "You have already applied for this scheme"
+      });
+    }
+
+    // convert uploaded files → buffer
+    const documents = [];
+    if (req.files) {
+      req.files.forEach(file => {
+        documents.push({
+          file_name: file.originalname,
+          file_type: file.mimetype,
+          data: file.buffer
+        });
+      });
+    }
+
+    const application = await SchemeApplication.create({
+      scheme_id,
+      citizen_id: req.user.id,
+      application_no: "SCH" + Date.now(),
+      documents
+    });
+
+    res.status(201).json({
+      message: "Scheme applied successfully",
+      application_no: application.application_no
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+/**
+ * EMPLOYEE → VERIFY / REJECT SCHEME
+ */
+exports.updateSchemeStatus = async (req, res) => {
+  try {
+    if (req.user.role !== "Employee") {
+      return res.status(403).json({ message: "Employee only" });
+    }
+
+    const { status, remarks } = req.body;
+
+    if (!["Verified", "Rejected"].includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status"
+      });
+    }
+
+    const application = await SchemeApplication.findByIdAndUpdate(
+      req.params.id,
+      {
+        status,
+        remarks,
+        verified_by: req.user.id
+      },
+      { new: true }
+    );
+
+    if (!application) {
+      return res.status(404).json({
+        message: "Application not found"
+      });
+    }
+
+    res.json({
+      message: "Scheme application updated",
+      application
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * CITIZEN → VIEW MY SCHEME APPLICATIONS
+ */
+exports.getMySchemeApplications = async (req, res) => {
+  try {
+    const applications = await SchemeApplication.find({
+      citizen_id: req.user.id
+    })
+      .populate("scheme_id", "name categories")
+      .sort({ createdAt: -1 });
+
+    res.json(applications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * EMPLOYEE → VIEW ALL SCHEME APPLICATIONS
+ */
+exports.getAllSchemeApplications = async (req, res) => {
+  try {
+    if (req.user.role !== "Employee") {
+      return res.status(403).json({ message: "Employee only" });
+    }
+
+    const applications = await SchemeApplication.find()
+      .populate("scheme_id", "name")
+      .populate("citizen_id", "name")
+      .sort({ createdAt: -1 });
+
+    res.json(applications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
