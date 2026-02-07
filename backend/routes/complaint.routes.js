@@ -21,6 +21,14 @@ router.post(
   createComplaint
 );
 
+// get my complaints (for citizen)
+router.get(
+  "/my",
+  authenticate,
+  authorize("Citizen", "Employee", "Admin"),
+  getAllComplaints
+);
+
 // get complaint details
 router.get(
   "/:id",

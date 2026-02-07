@@ -39,42 +39,6 @@ import { Complaint } from '@/types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-// Mock data for demo
-const mockComplaints: Complaint[] = [
-  {
-    _id: '1',
-    complaint_no: 'CMP-2024-001234',
-    title: 'Road Damage Near Market Area',
-    description: 'Large pothole near the main market causing accidents. Need immediate repair.',
-    status: 'In Progress',
-    category: 'Roads & Infrastructure',
-    citizen_id: 'user1',
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    remarks: 'Inspection scheduled for tomorrow. Repair work will begin soon.',
-  },
-  {
-    _id: '2',
-    complaint_no: 'CMP-2024-001122',
-    title: 'Street Light Not Working',
-    description: 'Street light in front of house no. 45 has been out for a week.',
-    status: 'Resolved',
-    category: 'Electricity',
-    citizen_id: 'user1',
-    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    remarks: 'Bulb replaced and connection fixed. Light is now working.',
-  },
-  {
-    _id: '3',
-    complaint_no: 'CMP-2024-001098',
-    title: 'Water Supply Issue',
-    description: 'Irregular water supply in our area for the past 2 weeks.',
-    status: 'Submitted',
-    category: 'Water Supply',
-    citizen_id: 'user1',
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
 const categories = [
   'Roads & Infrastructure',
   'Water Supply',
@@ -122,8 +86,8 @@ const Complaints: React.FC = () => {
     description: '',
   });
 
-  // Use mock data if API returns empty
-  const complaints = apiComplaints?.length ? apiComplaints : mockComplaints;
+  // Use API data directly
+  const complaints: Complaint[] = apiComplaints || [];
 
   const handleSubmitComplaint = async (e: React.FormEvent) => {
     e.preventDefault();

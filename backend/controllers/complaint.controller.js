@@ -107,11 +107,16 @@ exports.getAllComplaints = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.status(200).json({
-      count: complaints.length,
-      complaints
+      success: true,
+      message: "Complaints retrieved successfully",
+      data: complaints
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message,
+      error: error.message 
+    });
   }
 };
 

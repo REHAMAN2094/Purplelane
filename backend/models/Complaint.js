@@ -80,4 +80,4 @@ const ComplaintSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Complaint", ComplaintSchema);
+module.exports = mongoose.model("Complaints", ComplaintSchema);
