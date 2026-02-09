@@ -141,23 +141,8 @@ export interface Scheme {
   icon?: string;
 }
 
-// Service
-export interface CreateServiceData {
-  name: string;
-  required_documents: string[];
-}
-
-export interface Service {
-  _id: string;
-  name: string;
-  description: string;
-  required_documents: string[];
-  is_active: boolean;
-  createdAt: string;
-}
-
 // Applications
-export type ApplicationStatus = 'Pending' | 'Verified' | 'Rejected';
+export type ApplicationStatus = 'Submitted' | 'In Progress' | 'Resolved' | 'Rejected';
 
 export interface SchemeApplication {
   _id: string;
@@ -170,15 +155,42 @@ export interface SchemeApplication {
   createdAt: string;
 }
 
+// Service
+export interface Service {
+  _id: string;
+  name: string;
+  category: 'Certificate' | 'Identity' | 'Land' | 'Welfare' | 'Other';
+  description?: string;
+  required_documents: string[];
+  processing_days?: number;
+  is_active: boolean;
+  created_by?: string | { _id: string; username: string };
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateServiceData {
+  name: string;
+  category: string;
+  description?: string;
+  required_documents: string[];
+  processing_days?: number;
+}
+
+// Service Application
+export type ServiceApplicationStatus = 'Submitted' | 'In Progress' | 'Resolved' | 'Rejected';
+
 export interface ServiceApplication {
   _id: string;
   service_id: string | Service;
-  citizen_id: string;
-  status: ApplicationStatus;
+  citizen_id: string | { _id: string; name: string; phone: string };
   application_no: string;
-  documents: { file_name: string; file_path: string }[];
+  form_data?: any;
+  status: ServiceApplicationStatus;
   remarks?: string;
+  verified_by?: string | { _id: string; name: string };
   createdAt: string;
+  updatedAt?: string;
 }
 
 // Complaint

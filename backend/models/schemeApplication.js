@@ -30,7 +30,7 @@ const SchemeApplicationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Submitted", "Verified", "Rejected"],
+      enum: ["Submitted", "In Progress", "Resolved", "Rejected"],
       default: "Submitted"
     },
 

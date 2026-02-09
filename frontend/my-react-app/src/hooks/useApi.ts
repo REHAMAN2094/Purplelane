@@ -127,21 +127,106 @@ export const useServices = () => {
   return useQuery({
     queryKey: ['services'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<Service[]>>('/services');
-      return response.data.data || [];
+      const response = await api.get<{ success: boolean; count: number; services: Service[] }>('/services');
+      return response.data.services || [];
     },
+  });
+};
+
+export const useService = (id: string) => {
+  return useQuery({
+    queryKey: ['service', id],
+    queryFn: async () => {
+      const response = await api.get<{ success: boolean; service: Service }>(`/services/${id}`);
+      return response.data.service;
+    },
+    enabled: !!id,
   });
 };
 
 export const useCreateService = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: Partial<Service>) => {
-      const response = await api.post<ApiResponse<Service>>('/services', data);
-      return response.data.data;
+    mutationFn: async (data: any) => {
+      const response = await api.post<{ success: boolean; service: Service }>('/services', data);
+      return response.data.service;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+};
+
+export const useUpdateService = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await api.put<{ success: boolean; service: Service }>(`/services/${id}`, data);
+      return response.data.service;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+};
+
+export const useDeleteService = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete<{ success: boolean }>(`/services/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+};
+
+// ============ SERVICE APPLICATIONS ============
+export const useServiceApplications = () => {
+  return useQuery({
+    queryKey: ['service-applications'],
+    queryFn: async () => {
+      const response = await api.get<ApiResponse<ServiceApplication[]>>('/service-applications');
+      return response.data.data || [];
+    },
+  });
+};
+
+export const useMyServiceApplications = () => {
+  return useQuery({
+    queryKey: ['my-service-applications'],
+    queryFn: async () => {
+      const response = await api.get<ApiResponse<ServiceApplication[]>>('/service-applications/my');
+      return response.data.data || [];
+    },
+  });
+};
+
+export const useApplyForService = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { service_id: string; form_data?: any }) => {
+      const response = await api.post<ApiResponse<ServiceApplication>>('/service-applications/apply', data);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-service-applications'] });
+    },
+  });
+};
+
+export const useUpdateServiceApplicationStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status, remarks }: { id: string; status: string; remarks?: string }) => {
+      const response = await api.put<ApiResponse<ServiceApplication>>(`/service-applications/${id}/status`, { status, remarks });
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['my-service-applications'] });
     },
   });
 };

@@ -20,9 +20,13 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import Departments from "@/pages/admin/Departments";
 import Employees from "@/pages/admin/Employees";
 import Schemes from "@/pages/admin/Schemes";
+import AdminServices from "@/pages/admin/AdminServices";
 
 // Employee Pages
 import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
+import EmployeeApplications from "@/pages/employee/EmployeeApplications";
+import EmployeeComplaints from "@/pages/employee/EmployeeComplaints";
+import EmployeeServices from "@/pages/employee/EmployeeServices";
 
 // Citizen Pages
 import CitizenHome from "@/pages/citizen/CitizenHome";
@@ -58,6 +62,7 @@ const App = () => (
               <Route path="departments" element={<Departments />} />
               <Route path="employees" element={<Employees />} />
               <Route path="schemes" element={<Schemes />} />
+              <Route path="services" element={<AdminServices />} />
             </Route>
 
             {/* Employee Routes */}
@@ -67,6 +72,9 @@ const App = () => (
               </ProtectedRoute>
             }>
               <Route index element={<EmployeeDashboard />} />
+              <Route path="applications" element={<EmployeeApplications />} />
+              <Route path="complaints" element={<EmployeeComplaints />} />
+              <Route path="services" element={<EmployeeServices />} />
             </Route>
 
             {/* Citizen Routes */}

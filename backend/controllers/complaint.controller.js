@@ -112,10 +112,10 @@ exports.getAllComplaints = async (req, res) => {
       data: complaints
     });
   } catch (error) {
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: error.message,
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -145,6 +145,52 @@ exports.getComplaintImage = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * UPDATE COMPLAINT STATUS (Employee/Admin)
+ */
+exports.updateComplaintStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, remarks } = req.body;
+
+    // Validate status
+    const validStatuses = ['Submitted', 'In Progress', 'Resolved'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status. Must be one of: ' + validStatuses.join(', ')
+      });
+    }
+
+    const complaint = await Complaint.findById(id);
+
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        message: 'Complaint not found'
+      });
+    }
+
+    // Update fields
+    if (status) complaint.status = status;
+    if (remarks) complaint.remarks = remarks;
+
+    await complaint.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Complaint status updated successfully',
+      data: complaint
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 

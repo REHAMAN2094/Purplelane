@@ -26,12 +26,7 @@ const ServiceApplicationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "Submitted",
-        "Under Verification",
-        "Approved",
-        "Rejected"
-      ],
+      enum: ["Submitted", "In Progress", "Resolved", "Rejected"],
       default: "Submitted"
     },
 

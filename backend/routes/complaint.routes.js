@@ -9,7 +9,8 @@ const {
   createComplaint,
   getComplaintById,
   getComplaintImage,
-  getAllComplaints
+  getAllComplaints,
+  updateComplaintStatus
 } = require("../controllers/complaint.controller");
 
 // create complaint (Citizen)
@@ -51,7 +52,15 @@ router.get(
   authorize("Citizen", "Employee", "Admin"),
   getComplaintImage
 );
- 
+
+// update complaint status (Employee/Admin)
+router.put(
+  "/:id/status",
+  authenticate,
+  authorize("Employee", "Admin"),
+  updateComplaintStatus
+);
+
 router.get(
   "/",
   authenticate,

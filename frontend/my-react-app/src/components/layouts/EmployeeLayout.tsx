@@ -27,7 +27,8 @@ import { cn } from '@/lib/utils';
 
 const sidebarLinks = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/employee' },
-  { icon: FileCheck, label: 'Applications', path: '/employee/applications' },
+  { icon: FileCheck, label: 'Scheme Applications', path: '/employee/applications' },
+  { icon: ClipboardCheck, label: 'Service Applications', path: '/employee/services' },
   { icon: MessageSquare, label: 'Complaints', path: '/employee/complaints' },
 ];
 
