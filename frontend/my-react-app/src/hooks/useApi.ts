@@ -1,18 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api, { apiMultipart } from '@/lib/api';
-import { 
-  Scheme, 
-  SchemeApplication, 
-  Service, 
+import {
+  Scheme,
+  CreateSchemeData,
+  SchemeApplication,
+  Service,
   ServiceApplication,
-  Complaint, 
+  Complaint,
   Feedback,
   Department,
+  CreateDepartmentData,
   Employee,
+  CreateEmployeeData,
   AdminDashboardStats,
   EmployeeDashboardStats,
   CitizenDashboardStats,
-  ApiResponse 
+  ApiResponse
 } from '@/types';
 
 // ============ SCHEMES ============
@@ -20,8 +23,9 @@ export const useSchemes = () => {
   return useQuery({
     queryKey: ['schemes'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<Scheme[]>>('/schemes');
-      return response.data.data || [];
+      // Backend returns { count: number, schemes: Scheme[] }
+      const response = await api.get<{ count: number; schemes: Scheme[] }>('/admin/scheme');
+      return response.data.schemes || [];
     },
   });
 };
@@ -30,8 +34,9 @@ export const useScheme = (id: string) => {
   return useQuery({
     queryKey: ['scheme', id],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<Scheme>>(`/schemes/${id}`);
-      return response.data.data;
+      // Backend returns the scheme object directly
+      const response = await api.get<Scheme>(`/admin/scheme/${id}`);
+      return response.data;
     },
     enabled: !!id,
   });
@@ -40,9 +45,22 @@ export const useScheme = (id: string) => {
 export const useCreateScheme = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: Partial<Scheme>) => {
-      const response = await api.post<ApiResponse<Scheme>>('/schemes', data);
-      return response.data.data;
+    mutationFn: async (data: CreateSchemeData) => {
+      const response = await api.post<{ message: string; scheme: Scheme }>('/admin/scheme/create', data);
+      return response.data.scheme;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schemes'] });
+    },
+  });
+};
+
+export const useUpdateScheme = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreateSchemeData> }) => {
+      const response = await api.put<{ message: string; scheme: Scheme }>(`/admin/scheme/${id}`, data);
+      return response.data.scheme;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schemes'] });
@@ -202,18 +220,32 @@ export const useDepartments = () => {
   return useQuery({
     queryKey: ['departments'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<Department[]>>('/departments');
-      return response.data.data || [];
+      // Backend returns { count: number, departments: Department[] }
+      const response = await api.get<{ count: number; departments: Department[] }>('/admin/departments');
+      return response.data.departments || [];
     },
+  });
+};
+
+export const useDepartment = (id: string) => {
+  return useQuery({
+    queryKey: ['department', id],
+    queryFn: async () => {
+      // Backend returns the department object directly
+      const response = await api.get<Department>(`/admin/department/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
   });
 };
 
 export const useCreateDepartment = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { name: string; description: string }) => {
-      const response = await api.post<ApiResponse<Department>>('/departments', data);
-      return response.data.data;
+    mutationFn: async (data: CreateDepartmentData) => {
+      // Backend returns { message: string, department: Department }
+      const response = await api.post<{ message: string; department: Department }>('/admin/department/create', data);
+      return response.data.department;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
@@ -226,24 +258,31 @@ export const useEmployees = () => {
   return useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<Employee[]>>('/employees');
-      return response.data.data || [];
+      // Backend returns { count: number, employees: Employee[] }
+      const response = await api.get<{ count: number; employees: Employee[] }>('/admin/employees');
+      return response.data.employees || [];
     },
+  });
+};
+
+export const useEmployee = (id: string) => {
+  return useQuery({
+    queryKey: ['employee', id],
+    queryFn: async () => {
+      // Backend returns the employee object directly
+      const response = await api.get<Employee>(`/admin/employee/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
   });
 };
 
 export const useCreateEmployee = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { 
-      name: string; 
-      designation: string; 
-      department: string; 
-      username: string; 
-      password: string;
-    }) => {
-      const response = await api.post<ApiResponse<Employee>>('/employees', data);
-      return response.data.data;
+    mutationFn: async (data: CreateEmployeeData) => {
+      const response = await api.post<{ message: string; employee: Employee }>('/admin/employee/create', data);
+      return response.data.employee;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });

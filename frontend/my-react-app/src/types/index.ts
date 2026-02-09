@@ -62,55 +62,83 @@ export interface AuthResponse {
 export interface CreateDepartmentData {
   name: string;
   description: string;
+  contact_email: string;
+  contact_phone: string;
+  admin_id: string;
 }
 
 export interface Department {
   _id: string;
   name: string;
   description: string;
+  contact_email?: string;
+  contact_phone?: string;
+  created_by?: string | { _id: string; username: string; user_type: string };
   is_active: boolean;
   createdAt: string;
+  updatedAt?: string;
+  __v?: number;
 }
 
 // Employee
+// Employee
 export interface CreateEmployeeData {
   name: string;
-  username: string;
-  password?: string;
   designation: string;
   department_name: string;
+  phone: string;
+  email: string;
   role: string;
+  username: string;
+  password?: string;
+  admin_id: string;
 }
 
 export interface Employee {
   _id: string;
   name: string;
   designation: string;
-  department: string | Department;
-  username: string;
+  department_id: { _id: string; name: string; description: string } | string;
+  login_id: { _id: string; username: string; user_type: string } | string;
+  phone: string;
+  email: string;
+  role: string;
   is_active: boolean;
   createdAt: string;
 }
 
 // Scheme
+// Scheme
 export interface CreateSchemeData {
   name: string;
+  state?: string;
   categories: string[];
-  benefits: string;
-  required_documents?: string[];
+  short_description?: string;
+  description?: string;
+  benefits?: string;
+  eligibility_criteria: string[];
+  target_group?: string;
+  required_documents: string[];
+  application_steps?: { step_no: number; step_text: string }[];
 }
 
 export interface Scheme {
   _id: string;
   name: string;
+  state: string;
+  categories: string[];
+  is_active: boolean;
+  short_description?: string;
   description: string;
   benefits: string;
   eligibility_criteria: string[];
+  target_group?: string;
   required_documents: string[];
-  is_active: boolean;
-  categories: string[];
-  icon?: string;
+  application_steps?: { step_no: number; step_text: string }[];
+  created_by?: string | { _id: string; username: string; user_type: string };
   createdAt: string;
+  updatedAt?: string;
+  icon?: string;
 }
 
 // Service

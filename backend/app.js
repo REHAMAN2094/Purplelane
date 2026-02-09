@@ -10,7 +10,7 @@ app.use(express.json());
 app.use("/api/admin", require("./routes/admin.routes"));
 app.use("/api/citizens", require("./routes/citizen.routes"));
 
-app.use("/api/schemes", require("./routes/scheme.routes"));
+app.use("/api/scheme", require("./routes/scheme.routes"));
 // app.use("/api/applications", require("./routes/SchemeApplication.routes"));
 app.use("/api/complaints", require("./routes/complaint.routes"));
 

@@ -17,6 +17,9 @@ import CitizenLayout from "@/components/layouts/CitizenLayout";
 
 // Admin Pages
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import Departments from "@/pages/admin/Departments";
+import Employees from "@/pages/admin/Employees";
+import Schemes from "@/pages/admin/Schemes";
 
 // Employee Pages
 import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
@@ -52,6 +55,9 @@ const App = () => (
               </ProtectedRoute>
             }>
               <Route index element={<AdminDashboard />} />
+              <Route path="departments" element={<Departments />} />
+              <Route path="employees" element={<Employees />} />
+              <Route path="schemes" element={<Schemes />} />
             </Route>
 
             {/* Employee Routes */}

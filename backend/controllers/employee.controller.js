@@ -84,6 +84,47 @@ exports.createEmployee = async (req, res) => {
     });
   }
 };
+exports.getAllEmployees = async (req, res) => {
+  try {
+    const employees = await Employee.find()
+      .populate("department_id", "name description")
+      .populate("login_id", "username user_type")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      count: employees.length,
+      employees
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+};
+
+exports.getEmployeeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const employee = await Employee.findById(id)
+      .populate("department_id", "name description")
+      .populate("login_id", "username user_type");
+
+    if (!employee) {
+      return res.status(404).json({
+        message: "Employee not found"
+      });
+    }
+
+    res.status(200).json(employee);
+
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+};
 
 exports.updateServiceStatus = async (req, res) => {
   if (req.user.role !== "Employee") {

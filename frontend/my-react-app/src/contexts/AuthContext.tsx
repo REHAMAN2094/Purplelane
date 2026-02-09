@@ -69,10 +69,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         localStorage.setItem('auth_token', token as string);
 
-        // Construct basic user object since backend doesn't return full profile on login
-        // In a real app, we might decode the token or fetch profile here.
+        // Simple JWT decode to get ID
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const decoded = JSON.parse(jsonPayload);
+
         const userData: User = {
-          id: 'user_id_placeholder', // decoded from token in real implementation
+          id: decoded.id || 'user_id_placeholder',
           role: role as UserRole,
           username: credentials.username
         };
