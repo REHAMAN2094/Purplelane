@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Employee } from '@/types';
+import api from '@/lib/api';
 import {
   LayoutDashboard,
   FileCheck,
@@ -39,6 +41,22 @@ const EmployeeLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profile, setProfile] = useState<Employee | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get('/employees/profile/me');
+        if (response.data) {
+          setProfile(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching employee profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -130,12 +148,19 @@ const EmployeeLayout: React.FC = () => {
           <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/50">
             <Avatar className="h-10 w-10">
               <AvatarFallback className="bg-accent text-accent-foreground font-semibold">
-                {user?.username?.charAt(0).toUpperCase()}
+                {(profile?.name || user?.username)?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sidebar-foreground truncate">{user?.username}</p>
-              <p className="text-xs text-sidebar-muted">Employee</p>
+              <p className="font-medium text-sidebar-foreground truncate">{profile?.name || user?.username}</p>
+              <div className="space-y-0.5">
+                <p className="text-[10px] text-sidebar-muted uppercase tracking-wider font-bold">
+                  {profile?.designation || 'Employee'}
+                </p>
+                <p className="text-[10px] text-sidebar-muted truncate">
+                  {profile?.email}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -158,7 +183,7 @@ const EmployeeLayout: React.FC = () => {
               <h2 className="font-display font-semibold text-foreground">
                 {sidebarLinks.find((l) => l.path === location.pathname)?.label || 'Dashboard'}
               </h2>
-              <p className="text-xs text-muted-foreground">Welcome back, {user?.username}</p>
+              <p className="text-xs text-muted-foreground">Welcome back, {profile?.name || user?.username}</p>
             </div>
           </div>
 
@@ -173,7 +198,7 @@ const EmployeeLayout: React.FC = () => {
                 <Button variant="ghost" size="icon">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-accent text-accent-foreground text-sm">
-                      {user?.username?.charAt(0).toUpperCase()}
+                      {(profile?.name || user?.username)?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>

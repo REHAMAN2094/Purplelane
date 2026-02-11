@@ -27,6 +27,34 @@ export interface User {
   email?: string;
 }
 
+// Citizen Profile
+export interface Citizen {
+  _id: string;
+  name: string;
+  gender?: string;
+  dob?: string;
+  phone: string;
+  email: string;
+  address?: {
+    door_no?: string;
+    village?: string;
+    mandal?: string;
+    district?: string;
+    state?: string;
+    pincode?: string;
+  };
+  identity?: {
+    aadhar?: string;
+    voter_id?: string;
+    pan?: string;
+  };
+  login_id: string | { _id: string; username: string; user_type: string };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UpdateCitizenData extends Partial<Omit<Citizen, '_id' | 'login_id' | 'createdAt' | 'updatedAt'>> { }
+
 // Auth Types
 export interface LoginCredentials {
   username: string;

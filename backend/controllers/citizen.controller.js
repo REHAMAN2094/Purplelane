@@ -101,8 +101,13 @@ exports.getCitizenById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const citizen = await Citizen.findById(id)
-      .populate("login_id", "username user_type");
+    // Search by both internal _id and login_id
+    const citizen = await Citizen.findOne({
+      $or: [
+        { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null },
+        { login_id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }
+      ].filter(q => Object.values(q)[0] !== null)
+    }).populate("login_id", "username user_type");
 
     if (!citizen) {
       return res.status(404).json({
@@ -125,17 +130,25 @@ exports.updateCitizen = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const citizen = await Citizen.findByIdAndUpdate(
-      id,
-      req.body,
-      { new: true }
-    );
+    // First find the citizen to ensure we have the right document
+    const citizenCheck = await Citizen.findOne({
+      $or: [
+        { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null },
+        { login_id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }
+      ].filter(q => Object.values(q)[0] !== null)
+    });
 
-    if (!citizen) {
+    if (!citizenCheck) {
       return res.status(404).json({
         message: "Citizen not found"
       });
     }
+
+    const citizen = await Citizen.findByIdAndUpdate(
+      citizenCheck._id,
+      req.body,
+      { new: true }
+    );
 
     res.status(200).json({
       message: "Citizen updated successfully",

@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const Employee = require("../models/Employee");
-const { updateServiceStatus } = require("../controllers/employee.controller");
+const { updateServiceStatus, getProfile } = require("../controllers/employee.controller");
 const authenticate = require("../middleware/authenticate");
 const authorize = require("../middleware/authorize");
+
+router.get("/profile/me", authenticate, getProfile);
 
 router.post("/", async (req, res) => {
   res.json(await Employee.create(req.body));

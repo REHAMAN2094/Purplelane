@@ -15,7 +15,8 @@ import {
   CreateEmployeeData,
   AdminDashboardStats,
   EmployeeDashboardStats,
-  CitizenDashboardStats,
+  Citizen,
+  UpdateCitizenData,
   ApiResponse
 } from '@/types';
 
@@ -417,6 +418,31 @@ export const useCitizenDashboard = () => {
     queryFn: async () => {
       const response = await api.get<ApiResponse<CitizenDashboardStats>>('/dashboard/citizen');
       return response.data.data;
+    },
+  });
+};
+
+// ============ CITIZEN PROFILE ============
+export const useCitizen = (id: string) => {
+  return useQuery({
+    queryKey: ['citizen', id],
+    queryFn: async () => {
+      const response = await api.get<Citizen>(`/citizens/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useUpdateCitizen = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateCitizenData }) => {
+      const response = await api.put<{ message: string; citizen: Citizen }>(`/citizens/${id}`, data);
+      return response.data.citizen;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['citizen', variables.id] });
     },
   });
 };
