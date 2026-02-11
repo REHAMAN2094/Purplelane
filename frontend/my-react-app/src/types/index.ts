@@ -150,8 +150,9 @@ export interface SchemeApplication {
   citizen_id: string;
   status: ApplicationStatus;
   application_no: string;
-  documents: { file_name: string; file_path: string }[];
+  documents: { file_name: string; file_type: string; data?: any }[];
   remarks?: string;
+
   createdAt: string;
 }
 
@@ -187,8 +188,10 @@ export interface ServiceApplication {
   application_no: string;
   form_data?: any;
   status: ServiceApplicationStatus;
+  documents?: { file_name: string; file_type: string; data?: any }[];
   remarks?: string;
   verified_by?: string | { _id: string; name: string };
+
   createdAt: string;
   updatedAt?: string;
 }
@@ -203,7 +206,9 @@ export interface Complaint {
   description: string;
   status: ComplaintStatus;
   category: string;
+  attachments?: { file_name: string; file_type: string; data?: any }[];
   image?: string;
+
   assigned_to?: string | Employee;
   citizen_id: string;
   remarks?: string;
@@ -213,12 +218,14 @@ export interface Complaint {
 // Feedback
 export interface Feedback {
   _id: string;
-  complaint_id: string | Complaint;
-  citizen_id: string;
+  complaint_id: string | { _id: string; complaint_no: string };
+  citizen_id: string | { _id: string; name: string };
+  citizen_name?: string;
   rating: number;
   description: string;
   createdAt: string;
 }
+
 
 // Dashboard Stats
 export interface AdminDashboardStats {

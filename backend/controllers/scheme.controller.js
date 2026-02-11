@@ -112,11 +112,19 @@ const SchemeApplication = require("../models/SchemeApplication");
 
 exports.applyScheme = async (req, res) => {
   try {
+    console.log("Apply Scheme Request Body:", req.body);
+    console.log("Apply Scheme Files Count:", req.files ? req.files.length : 0);
+
     if (req.user.role !== "Citizen") {
       return res.status(403).json({ message: "Only citizens can apply" });
     }
 
     const { scheme_id } = req.body;
+
+    if (!scheme_id) {
+      console.log("Error: scheme_id is missing");
+      return res.status(400).json({ message: "scheme_id is required" });
+    }
 
     // prevent duplicate application
     const alreadyApplied = await SchemeApplication.findOne({
@@ -125,6 +133,7 @@ exports.applyScheme = async (req, res) => {
     });
 
     if (alreadyApplied) {
+      console.log("Error: Already applied for this scheme", { scheme_id, citizen_id: req.user.id });
       return res.status(400).json({
         message: "You have already applied for this scheme"
       });
@@ -150,8 +159,12 @@ exports.applyScheme = async (req, res) => {
     });
 
     res.status(201).json({
+      success: true,
       message: "Scheme applied successfully",
-      application_no: application.application_no
+      data: {
+        application_no: application.application_no,
+        application
+      }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -193,8 +206,9 @@ exports.updateSchemeStatus = async (req, res) => {
     }
 
     res.json({
+      success: true,
       message: "Scheme application updated",
-      application
+      data: application
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -233,6 +247,25 @@ exports.getAllSchemeApplications = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json(applications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+/**
+ * GET SCHEME APPLICATION DOCUMENT
+ */
+exports.getSchemeApplicationDocument = async (req, res) => {
+  try {
+    const { id, index } = req.params;
+    const application = await SchemeApplication.findById(id);
+
+    if (!application || !application.documents || !application.documents[index]) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    const document = application.documents[index];
+    res.set("Content-Type", document.file_type);
+    res.send(document.data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

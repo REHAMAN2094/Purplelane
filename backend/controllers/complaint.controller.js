@@ -122,9 +122,9 @@ exports.getAllComplaints = async (req, res) => {
 
 
 /**
- * GET COMPLAINT IMAGE BY INDEX
+ * GET COMPLAINT ATTACHMENT BY INDEX
  */
-exports.getComplaintImage = async (req, res) => {
+exports.getComplaintAttachment = async (req, res) => {
   try {
     const { id, index } = req.params;
 

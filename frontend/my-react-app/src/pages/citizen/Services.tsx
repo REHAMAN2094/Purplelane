@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useServices, useApplyForService } from '@/hooks/useApi';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,8 @@ import {
   Tag,
   CheckCircle2,
   AlertCircle,
+  Upload,
+  X,
 } from 'lucide-react';
 import { Service } from '@/types';
 import { toast } from 'sonner';
@@ -88,6 +91,8 @@ const Services: React.FC = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [documentFiles, setDocumentFiles] = useState<{ name: string; file: File | null }[]>([]);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Filter services
   const filteredServices = services?.filter((service) => {
@@ -101,7 +106,16 @@ const Services: React.FC = () => {
   const openApplyDialog = (service: Service) => {
     setSelectedService(service);
     setFormData({});
+    setDocumentFiles(service.required_documents.map(doc => ({ name: doc, file: null })));
     setIsApplyDialogOpen(true);
+  };
+
+  const handleFileChange = (index: number, file: File | null) => {
+    setDocumentFiles(prev => {
+      const newDocs = [...prev];
+      newDocs[index] = { ...newDocs[index], file };
+      return newDocs;
+    });
   };
 
   const handleInputChange = (fieldName: string, value: any) => {
@@ -129,23 +143,35 @@ const Services: React.FC = () => {
 
     if (!validateForm()) return;
 
-    applyForService.mutate(
-      {
-        service_id: selectedService._id,
-        form_data: formData
-      },
-      {
-        onSuccess: () => {
-          toast.success('Application submitted successfully!');
-          setIsApplyDialogOpen(false);
-          setSelectedService(null);
-          setFormData({});
-        },
-        onError: (error: any) => {
-          toast.error(error.response?.data?.message || 'Failed to submit application');
-        },
+    // Validate documents
+    const missingDocs = documentFiles.filter(doc => !doc.file);
+    if (missingDocs.length > 0) {
+      toast.error(`Please upload all required documents: ${missingDocs.map(d => d.name).join(', ')}`);
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append('service_id', selectedService._id);
+    fd.append('form_data', JSON.stringify(formData));
+
+    documentFiles.forEach((doc) => {
+      if (doc.file) {
+        fd.append('documents', doc.file);
       }
-    );
+    });
+
+    applyForService.mutate(fd, {
+      onSuccess: () => {
+        toast.success('Application submitted successfully!');
+        setIsApplyDialogOpen(false);
+        setSelectedService(null);
+        setFormData({});
+        setDocumentFiles([]);
+      },
+      onError: (error: any) => {
+        toast.error(error.response?.data?.message || 'Failed to submit application');
+      },
+    });
   };
 
   if (isLoading) {
@@ -301,16 +327,68 @@ const Services: React.FC = () => {
               </div>
 
               {/* Required Documents */}
-              <div className="space-y-2">
-                <h4 className="font-semibold text-sm flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Required Documents:
-                </h4>
-                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-2">
-                  {selectedService.required_documents.map((doc, idx) => (
-                    <li key={idx}>{doc}</li>
-                  ))}
-                </ul>
+              <h4 className="font-semibold text-sm flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Required Documents:
+              </h4>
+              <div className="grid gap-3 ml-2">
+                {documentFiles.map((doc, idx) => (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-lg border-2 border-dashed transition-all",
+                      doc.file ? "border-green-500/50 bg-green-500/5" : "border-muted hover:border-primary/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      {doc.file ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      ) : (
+                        <div className="h-4 w-4 rounded-full border-2 border-muted flex-shrink-0" />
+                      )}
+                      <div className="truncate">
+                        <p className="text-sm font-medium truncate">{doc.name}</p>
+                        {doc.file && (
+                          <p className="text-[10px] text-muted-foreground truncate">
+                            {doc.file.name} ({(doc.file.size / 1024).toFixed(1)} KB)
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {doc.file ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleFileChange(idx, null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8"
+                          onClick={() => fileInputRefs.current[idx]?.click()}
+                        >
+                          <Upload className="h-3.5 w-3.5 mr-1" />
+                          Upload
+                        </Button>
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        ref={el => fileInputRefs.current[idx] = el}
+                        onChange={(e) => handleFileChange(idx, e.target.files?.[0] || null)}
+                        accept=".pdf,.jpg,.jpeg,.png"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Dynamic Form Fields */}

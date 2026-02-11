@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useSchemes, useAllApplications, useUpdateApplicationStatus } from '@/hooks/useApi';
+import { API_BASE_URL } from '@/lib/api';
+
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -424,16 +427,47 @@ const EmployeeApplications: React.FC = () => {
                                 </p>
                             </div>
 
-                            <div>
-                                <span className="text-sm text-muted-foreground">Documents Submitted</span>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                    {selectedApplication.documents.map((doc, i) => (
-                                        <Badge key={i} variant="secondary">
-                                            {doc.file_name}
-                                        </Badge>
+                            <div className="space-y-3">
+                                <span className="text-sm text-muted-foreground font-medium flex items-center gap-2">
+                                    <Eye className="h-4 w-4" />
+                                    Submitted Documents ({selectedApplication.documents?.length || 0})
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                                    {selectedApplication.documents?.map((doc: any, index: number) => (
+                                        <div key={index} className="space-y-2">
+                                            <div className="p-2 border rounded-xl bg-muted/30 overflow-hidden">
+                                                {doc.file_type?.startsWith('image/') ? (
+                                                    <img
+                                                        src={`${API_BASE_URL}/scheme-applications/${selectedApplication._id}/document/${index}`}
+                                                        alt={doc.file_name}
+                                                        className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform cursor-pointer"
+                                                        onClick={() => window.open(`${API_BASE_URL}/scheme-applications/${selectedApplication._id}/document/${index}?token=${localStorage.getItem('auth_token')}`)}
+                                                    />
+
+                                                ) : (
+                                                    <div
+                                                        className="w-full h-32 flex flex-col items-center justify-center bg-muted rounded-lg cursor-pointer hover:bg-muted/80"
+                                                        onClick={() => window.open(`${API_BASE_URL}/scheme-applications/${selectedApplication._id}/document/${index}?token=${localStorage.getItem('auth_token')}`)}
+                                                    >
+
+                                                        <FileText className="h-8 w-8 text-primary mb-2" />
+                                                        <span className="text-xs font-medium px-2 text-center truncate w-full">
+                                                            {doc.file_name}
+                                                        </span>
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                            {doc.file_type?.split('/')[1]?.toUpperCase() || 'DOCUMENT'}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground truncate px-1">
+                                                {doc.file_name}
+                                            </p>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
+
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Update Status</label>

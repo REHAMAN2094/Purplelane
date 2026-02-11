@@ -1,5 +1,6 @@
 const Employee = require("../models/Employee");
 const Department = require("../models/Department");
+const ServiceApplication = require("../models/ServiceApplication");
 const Login = require("../models/Login");
 const bcrypt = require("bcryptjs");
 
@@ -103,6 +104,36 @@ exports.getAllEmployees = async (req, res) => {
   }
 };
 
+exports.updateServiceStatus = async (req, res) => {
+  try {
+    if (req.user.role !== "Employee") {
+      return res.status(403).json({ message: "Employee only" });
+    }
+
+    const application = await ServiceApplication.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: req.body.status,
+        remarks: req.body.remarks,
+        verified_by: req.user.id
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Service application status updated",
+      data: application
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
 exports.getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -126,20 +157,3 @@ exports.getEmployeeById = async (req, res) => {
   }
 };
 
-exports.updateServiceStatus = async (req, res) => {
-  if (req.user.role !== "Employee") {
-    return res.status(403).json({ message: "Employee only" });
-  }
-
-  const application = await ServiceApplication.findByIdAndUpdate(
-    req.params.id,
-    {
-      status: req.body.status,
-      remarks: req.body.remarks,
-      verified_by: req.user.id
-    },
-    { new: true }
-  );
-
-  res.json(application);
-};

@@ -32,11 +32,11 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       await register(formData);
-      toast.success('Registration successful! Welcome to Digital Village.');
-      navigate('/citizen');
+      toast.success('Registration successful! Please login to continue.');
+      navigate('/login');
     } catch (err: any) {
       toast.error(err.message || 'Registration failed');
     }
@@ -54,7 +54,7 @@ const Register: React.FC = () => {
       {/* Left Panel - Decorative */}
       <div className="hidden lg:flex lg:w-1/2 hero-gradient relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-        
+
         <div className="relative z-10 flex flex-col justify-center p-12 lg:p-16 text-white">
           <div className="mb-12">
             <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-6">

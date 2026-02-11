@@ -1,41 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const SchemeApplication = require("../models/SchemeApplication");
 const authenticate = require("../middleware/authenticate");
 const authorize = require("../middleware/authorize");
+const upload = require("../middleware/uploadImage");
 
 const {
   applyScheme,
   updateSchemeStatus,
   getMySchemeApplications,
-  getAllSchemeApplications
+  getAllSchemeApplications,
+  getSchemeApplicationDocument
 } = require("../controllers/scheme.controller");
-const upload = require("../middleware/uploadImage");
-
-router.post("/", async (req, res) => {
-  res.json(await SchemeApplication.create(req.body));
-});
-
-router.get("/:id", async (req, res) => {
-  res.json(await SchemeApplication.findById(req.params.id));
-});
-
-router.get("/citizen/:citizenId", async (req, res) => {
-  res.json(
-    await SchemeApplication.find({ citizen_id: req.params.citizenId })
-  );
-});
-
-router.put("/:id/status", async (req, res) => {
-  res.json(
-    await SchemeApplication.findByIdAndUpdate(
-      req.params.id,
-      { status: req.body.status },
-      { new: true }
-    )
-  );
-});
-
 
 
 // citizen apply
@@ -43,7 +18,20 @@ router.post(
   "/apply",
   authenticate,
   authorize("Citizen"),
-  upload.array("documents", 5), // max 5 files
+  (req, res, next) => {
+    console.log("Entering /apply route, citizen_id:", req.user.id);
+    upload.array("documents", 5)(req, res, (err) => {
+      if (err) {
+        console.error("Multer Error in /apply:", err);
+        if (err instanceof require("multer").MulterError) {
+          return res.status(400).json({ message: `Upload error: ${err.message}` });
+        }
+        return res.status(400).json({ message: err.message });
+      }
+      console.log("Multer upload success, proceeding to applyScheme");
+      next();
+    });
+  },
   applyScheme
 );
 
@@ -71,7 +59,12 @@ router.put(
   updateSchemeStatus
 );
 
-
-
+// employee view specific document
+router.get(
+  "/:id/document/:index",
+  authenticate,
+  authorize("Employee", "Admin"),
+  getSchemeApplicationDocument
+);
 
 module.exports = router;

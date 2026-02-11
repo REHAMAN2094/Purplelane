@@ -30,7 +30,9 @@ const sidebarLinks = [
   { icon: FileCheck, label: 'Scheme Applications', path: '/employee/applications' },
   { icon: ClipboardCheck, label: 'Service Applications', path: '/employee/services' },
   { icon: MessageSquare, label: 'Complaints', path: '/employee/complaints' },
+  { icon: MessageSquare, label: 'Feedback', path: '/employee/feedback' },
 ];
+
 
 const EmployeeLayout: React.FC = () => {
   const { user, logout } = useAuth();

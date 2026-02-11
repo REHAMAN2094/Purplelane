@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useComplaints, useUpdateComplaintStatus } from '@/hooks/useApi';
+import { API_BASE_URL } from '@/lib/api';
+
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +35,9 @@ import {
     ClipboardCheck,
     User,
     Tag,
+    FileText,
 } from 'lucide-react';
+
 import { Complaint, ComplaintStatus } from '@/types';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -373,21 +378,46 @@ const EmployeeComplaints: React.FC = () => {
                                 </p>
                             </div>
 
-                            {selectedComplaint.image && (
-                                <div>
-                                    <span className="text-sm text-muted-foreground">Attached Image</span>
-                                    <div className="mt-2 p-2 border rounded-lg">
-                                        <img
-                                            src={`http://localhost:5000/api/complaints/${selectedComplaint._id}/image`}
-                                            alt="Complaint attachment"
-                                            className="max-w-full h-auto rounded"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                            }}
-                                        />
+                            {(selectedComplaint.attachments?.length || 0) > 0 && (
+                                <div className="space-y-2">
+                                    <span className="text-sm text-muted-foreground font-medium flex items-center gap-2">
+                                        <Eye className="h-4 w-4" />
+                                        Attachments ({selectedComplaint.attachments?.length})
+                                    </span>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                                        {selectedComplaint.attachments?.map((attachment, index) => (
+                                            <div key={index} className="space-y-2">
+                                                <div className="p-2 border rounded-xl bg-muted/30 overflow-hidden">
+                                                    {attachment.file_type.startsWith('image/') ? (
+                                                        <img
+                                                            src={`${API_BASE_URL}/complaints/${selectedComplaint._id}/attachment/${index}`}
+                                                            alt={attachment.file_name}
+                                                            className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform cursor-pointer"
+                                                            onClick={() => window.open(`${API_BASE_URL}/complaints/${selectedComplaint._id}/attachment/${index}?token=${localStorage.getItem('auth_token')}`)}
+                                                        />
+
+                                                    ) : (
+                                                        <div
+                                                            className="w-full h-32 flex flex-col items-center justify-center bg-muted rounded-lg cursor-pointer hover:bg-muted/80"
+                                                            onClick={() => window.open(`${API_BASE_URL}/complaints/${selectedComplaint._id}/attachment/${index}?token=${localStorage.getItem('auth_token')}`)}
+                                                        >
+
+                                                            <FileText className="h-8 w-8 text-primary mb-2" />
+                                                            <span className="text-xs font-medium px-2 text-center truncate w-full">
+                                                                {attachment.file_name}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground truncate px-1">
+                                                    {attachment.file_name}
+                                                </p>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}
+
 
                             <div className="border-t pt-4 space-y-4">
                                 <h3 className="font-semibold">Update Status</h3>

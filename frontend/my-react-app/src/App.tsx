@@ -27,6 +27,8 @@ import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
 import EmployeeApplications from "@/pages/employee/EmployeeApplications";
 import EmployeeComplaints from "@/pages/employee/EmployeeComplaints";
 import EmployeeServices from "@/pages/employee/EmployeeServices";
+import EmployeeFeedback from "@/pages/employee/EmployeeFeedback";
+
 
 // Citizen Pages
 import CitizenHome from "@/pages/citizen/CitizenHome";
@@ -75,7 +77,9 @@ const App = () => (
               <Route path="applications" element={<EmployeeApplications />} />
               <Route path="complaints" element={<EmployeeComplaints />} />
               <Route path="services" element={<EmployeeServices />} />
+              <Route path="feedback" element={<EmployeeFeedback />} />
             </Route>
+
 
             {/* Citizen Routes */}
             <Route path="/citizen" element={

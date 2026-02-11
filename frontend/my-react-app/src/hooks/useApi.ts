@@ -7,6 +7,7 @@ import {
   Service,
   ServiceApplication,
   Complaint,
+  ComplaintStatus,
   Feedback,
   Department,
   CreateDepartmentData,
@@ -73,8 +74,8 @@ export const useMyApplications = () => {
   return useQuery({
     queryKey: ['my-applications'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<SchemeApplication[]>>('/scheme-applications/my');
-      return response.data.data || [];
+      const response = await api.get<SchemeApplication[]>('/scheme-applications/my');
+      return response.data || [];
     },
   });
 };
@@ -83,8 +84,8 @@ export const useAllApplications = () => {
   return useQuery({
     queryKey: ['all-applications'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<SchemeApplication[]>>('/scheme-applications');
-      return response.data.data || [];
+      const response = await api.get<SchemeApplication[]>('/scheme-applications');
+      return response.data || [];
     },
   });
 };
@@ -207,8 +208,8 @@ export const useMyServiceApplications = () => {
 export const useApplyForService = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { service_id: string; form_data?: any }) => {
-      const response = await api.post<ApiResponse<ServiceApplication>>('/service-applications/apply', data);
+    mutationFn: async (formData: FormData) => {
+      const response = await apiMultipart.post<ApiResponse<ServiceApplication>>('/service-applications/apply', formData);
       return response.data.data;
     },
     onSuccess: () => {
@@ -296,7 +297,21 @@ export const useCreateFeedback = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['complaints'] });
+      queryClient.invalidateQueries({ queryKey: ['all-feedback'] });
     },
+
+  });
+};
+
+export const useAllFeedback = () => {
+  return useQuery({
+    queryKey: ['all-feedback'],
+    queryFn: async () => {
+      // Backend returns { count: number, feedbacks: Feedback[] }
+      const response = await api.get<{ count: number; feedbacks: Feedback[] }>('/feedback');
+      return response.data.feedbacks || [];
+    },
+
   });
 };
 

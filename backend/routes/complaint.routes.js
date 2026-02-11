@@ -9,9 +9,11 @@ const {
   createComplaint,
   getComplaintById,
   getComplaintImage,
+  getComplaintAttachment,
   getAllComplaints,
   updateComplaintStatus
 } = require("../controllers/complaint.controller");
+
 
 // create complaint (Citizen)
 router.post(
@@ -68,5 +70,13 @@ router.get(
   getAllComplaints
 );
 
+
+// get complaint image by index
+router.get(
+  "/:id/attachment/:index",
+  authenticate,
+  authorize("Admin", "Employee", "Citizen"),
+  getComplaintAttachment
+);
 
 module.exports = router;

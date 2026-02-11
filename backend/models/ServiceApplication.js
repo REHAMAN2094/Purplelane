@@ -13,6 +13,10 @@ const ServiceApplicationSchema = new mongoose.Schema(
       ref: "Citizen",
       required: true
     },
+    citizen_name: {
+      type: String,
+      required: true
+    },
 
     application_no: {
       type: String,
@@ -21,8 +25,29 @@ const ServiceApplicationSchema = new mongoose.Schema(
 
     form_data: {
       type: Object
-      // dynamic fields (JSON)
     },
+
+    // NEW FIELD: uploaded documents
+    documents: [
+      {
+        file_name: {
+          type: String,
+          required: true
+        },
+        file_type: {
+          type: String,
+          required: true
+        },
+        data: {
+          type: Buffer,
+          required: true
+        },
+        uploaded_at: {
+          type: Date,
+          default: Date.now
+        }
+      }
+    ],
 
     status: {
       type: String,

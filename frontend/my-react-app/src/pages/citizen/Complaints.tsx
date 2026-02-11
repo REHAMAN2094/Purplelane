@@ -71,7 +71,7 @@ const Complaints: React.FC = () => {
   const { data: apiComplaints, isLoading } = useMyComplaints();
   const createComplaintMutation = useCreateComplaint();
   const createFeedbackMutation = useCreateFeedback();
-  
+
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
@@ -91,13 +91,13 @@ const Complaints: React.FC = () => {
 
   const handleSubmitComplaint = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const fd = new FormData();
     fd.append('title', formData.title);
     fd.append('description', formData.description);
     fd.append('category', formData.category);
     if (imageFile) {
-      fd.append('image', imageFile);
+      fd.append('attachments', imageFile);
     }
 
     try {

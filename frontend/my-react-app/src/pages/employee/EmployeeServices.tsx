@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useServices, useServiceApplications, useUpdateServiceApplicationStatus } from '@/hooks/useApi';
+import { API_BASE_URL } from '@/lib/api';
+
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -448,6 +451,51 @@ const EmployeeServices: React.FC = () => {
                                     </Badge>
                                 </div>
                             </div>
+
+                            {/* Documents Section */}
+                            {(selectedApplication as any).documents?.length > 0 && (
+                                <div className="space-y-3">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                        <Eye className="h-4 w-4" />
+                                        Submitted Documents ({(selectedApplication as any).documents.length})
+                                    </span>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {(selectedApplication as any).documents.map((doc: any, index: number) => (
+                                            <div key={index} className="space-y-2">
+                                                <div className="p-2 border rounded-xl bg-muted/30 overflow-hidden shadow-sm">
+                                                    {doc.file_type?.startsWith('image/') ? (
+                                                        <img
+                                                            src={`${API_BASE_URL}/service-applications/${selectedApplication._id}/document/${index}`}
+                                                            alt={doc.file_name}
+                                                            className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform cursor-pointer"
+                                                            onClick={() => window.open(`${API_BASE_URL}/service-applications/${selectedApplication._id}/document/${index}?token=${localStorage.getItem('auth_token')}`)}
+                                                        />
+
+                                                    ) : (
+                                                        <div
+                                                            className="w-full h-32 flex flex-col items-center justify-center bg-muted rounded-lg cursor-pointer hover:bg-muted/80"
+                                                            onClick={() => window.open(`${API_BASE_URL}/service-applications/${selectedApplication._id}/document/${index}?token=${localStorage.getItem('auth_token')}`)}
+                                                        >
+
+                                                            <FileText className="h-8 w-8 text-primary mb-2" />
+                                                            <span className="text-xs font-medium px-2 text-center truncate w-full font-mono">
+                                                                {doc.file_name}
+                                                            </span>
+                                                            <span className="text-[10px] text-muted-foreground">
+                                                                {doc.file_type?.split('/')[1]?.toUpperCase() || 'DOCUMENT'}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground truncate px-1 text-center font-medium">
+                                                    {doc.file_name}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
 
                             {/* Form Data */}
                             {selectedApplication.form_data && Object.keys(selectedApplication.form_data).length > 0 && (

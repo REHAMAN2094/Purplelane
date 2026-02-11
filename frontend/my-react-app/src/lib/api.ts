@@ -1,7 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // API base URL - change this to match your backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 
 // Create axios instance
 const api = axios.create({
@@ -16,7 +17,7 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('auth_token');
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.set('Authorization', `Bearer ${token}`);
     }
     return config;
   },
@@ -33,7 +34,7 @@ api.interceptors.response.use(
       // Token expired or invalid - clear storage and redirect to login
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
-      
+
       // Only redirect if not already on login page
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
@@ -54,8 +55,7 @@ apiMultipart.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('auth_token');
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-      config.headers['Content-Type'] = 'multipart/form-data';
+      config.headers.set('Authorization', `Bearer ${token}`);
     }
     return config;
   },

@@ -1,9 +1,11 @@
 const cors = require("cors");
 const express = require("express");
 const app = express();
+const morgan = require("morgan");
 
 // middleware
 app.use(cors());
+app.use(morgan("dev"));
 app.use(express.json());
 
 // routes
@@ -21,5 +23,15 @@ app.use("/api/scheme-applications", require("./routes/SchemeApplication.routes")
 // Service routes
 app.use("/api/services", require("./routes/service.routes"));
 app.use("/api/service-applications", require("./routes/serviceApplication.routes"));
+
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error("Global Error Handler Catch:", err);
+    res.status(err.status || 400).json({
+        success: false,
+        message: err.message || "An unexpected error occurred",
+        error: process.env.NODE_ENV === "development" ? err : {}
+    });
+});
 
 module.exports = app;

@@ -10,14 +10,15 @@ const FeedbackSchema = new mongoose.Schema(
 
     citizen_name: {
       type: String,
-      required: true
+      required: false
     },
 
     // optional but recommended (feedback after complaint resolution)
     complaint_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Complaint"
+      ref: "Complaints"
     },
+
 
     rating: {
       type: Number,
