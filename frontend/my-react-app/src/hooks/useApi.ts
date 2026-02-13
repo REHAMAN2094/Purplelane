@@ -17,6 +17,7 @@ import {
   EmployeeDashboardStats,
   Citizen,
   UpdateCitizenData,
+  CitizenDashboardStats,
   ApiResponse
 } from '@/types';
 
@@ -120,6 +121,8 @@ export const useUpdateApplicationStatus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-applications'] });
       queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     },
   });
 };
@@ -229,6 +232,8 @@ export const useUpdateServiceApplicationStatus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service-applications'] });
       queryClient.invalidateQueries({ queryKey: ['my-service-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     },
   });
 };
@@ -284,6 +289,8 @@ export const useUpdateComplaintStatus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['complaints'] });
       queryClient.invalidateQueries({ queryKey: ['my-complaints'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     },
   });
 };
@@ -392,32 +399,32 @@ export const useCreateEmployee = () => {
 };
 
 // ============ DASHBOARD STATS ============
-export const useAdminDashboard = () => {
+export const useAdminStats = () => {
   return useQuery({
-    queryKey: ['admin-dashboard'],
+    queryKey: ['admin-stats'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<AdminDashboardStats>>('/dashboard/admin');
-      return response.data.data;
+      const response = await api.get<AdminDashboardStats>('/stats/admin');
+      return response.data;
     },
   });
 };
 
-export const useEmployeeDashboard = () => {
+export const useEmployeeStats = () => {
   return useQuery({
-    queryKey: ['employee-dashboard'],
+    queryKey: ['employee-stats'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<EmployeeDashboardStats>>('/dashboard/employee');
-      return response.data.data;
+      const response = await api.get<EmployeeDashboardStats>('/stats/employee');
+      return response.data;
     },
   });
 };
 
-export const useCitizenDashboard = () => {
+export const useCitizenStats = () => {
   return useQuery({
-    queryKey: ['citizen-dashboard'],
+    queryKey: ['citizen-stats'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<CitizenDashboardStats>>('/dashboard/citizen');
-      return response.data.data;
+      const response = await api.get<CitizenDashboardStats>('/stats/citizen');
+      return response.data;
     },
   });
 };

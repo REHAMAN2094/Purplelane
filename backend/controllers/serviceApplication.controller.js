@@ -189,10 +189,18 @@ exports.updateApplicationStatus = async (req, res) => {
             });
         }
 
+        // Find Employee associated with this Login
+        const Employee = require("../models/Employee");
+        const employee = await Employee.findOne({ login_id: req.user.id });
+
+        if (!employee) {
+            return res.status(404).json({ message: "Employee profile not found for this user" });
+        }
+
         // Update fields
         if (status) application.status = status;
         if (remarks) application.remarks = remarks;
-        application.verified_by = req.user.id;
+        application.verified_by = employee._id;
 
         await application.save();
 

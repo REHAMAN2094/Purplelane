@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useCitizen, useUpdateCitizen } from '@/hooks/useApi';
+import { useCitizen, useUpdateCitizen, useCitizenStats } from '@/hooks/useApi';
 import {
   FileText,
   MessageSquare,
@@ -32,6 +32,7 @@ const CitizenHome: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { data: citizen, isLoading: isFetching } = useCitizen(user?.id || '');
+  const { data: statsData, isLoading: isStatsLoading } = useCitizenStats();
   const updateMutation = useUpdateCitizen();
 
   const [formData, setFormData] = useState({
@@ -133,10 +134,10 @@ const CitizenHome: React.FC = () => {
   ];
 
   const stats = [
-    { icon: ClipboardList, label: 'Total Applications', value: '3', color: 'text-primary' },
-    { icon: Clock, label: 'Pending', value: '1', color: 'text-warning' },
-    { icon: CheckCircle2, label: 'Approved', value: '2', color: 'text-success' },
-    { icon: AlertCircle, label: 'Active Complaints', value: '1', color: 'text-destructive' },
+    { icon: ClipboardList, label: 'Total Applications', value: statsData?.totalApplications?.toString() || '0', color: 'text-primary' },
+    { icon: Clock, label: 'Pending', value: statsData?.pendingApplications?.toString() || '0', color: 'text-warning' },
+    { icon: CheckCircle2, label: 'Approved', value: statsData?.approvedApplications?.toString() || '0', color: 'text-success' },
+    { icon: AlertCircle, label: 'Active Complaints', value: statsData?.activeComplaints?.toString() || '0', color: 'text-destructive' },
   ];
 
   const featuredSchemes = [
