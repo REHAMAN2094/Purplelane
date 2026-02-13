@@ -257,25 +257,24 @@ export interface Feedback {
 
 // Dashboard Stats
 export interface AdminDashboardStats {
-  total_citizens?: number;
-  total_complaints?: number;
-  resolved_complaints?: number;
-  // Mapping potential variations
-  totalCitizens?: number;
-  totalComplaints?: number;
-  resolvedComplaints?: number;
+  totalCitizens: number;
+  totalSchemes: number;
+  pendingApplications: number;
+  resolvedComplaints: number;
+  totalDepartments: number;
+  totalEmployees: number;
 }
 
 export interface EmployeeDashboardStats {
   pendingApplications: number;
-  verifiedApplications: number;
+  verifiedToday: number;
   assignedComplaints: number;
   resolvedComplaints: number;
 }
 
 export interface CitizenDashboardStats {
-  myApplications: number;
+  totalApplications: number;
   pendingApplications: number;
-  myComplaints: number;
-  resolvedComplaints: number;
+  approvedApplications: number;
+  activeComplaints: number;
 }

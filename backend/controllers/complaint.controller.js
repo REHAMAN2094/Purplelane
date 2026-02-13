@@ -26,8 +26,16 @@ exports.createComplaint = async (req, res) => {
       });
     }
 
+    // Find Citizen profile
+    const Citizen = require("../models/Citizen");
+    const citizen = await Citizen.findOne({ login_id: req.user.id });
+
+    if (!citizen) {
+      return res.status(404).json({ message: "Citizen profile not found. Please complete your profile." });
+    }
+
     const complaint = await Complaint.create({
-      citizen_id: req.user.id, // from JWT
+      citizen_id: citizen._id,
       title,
       description,
       category,
@@ -174,9 +182,21 @@ exports.updateComplaintStatus = async (req, res) => {
       });
     }
 
+    // Find Employee associated with this Login (if available) - assuming user is Employee/Admin
+    const Employee = require("../models/Employee");
+    const employee = await Employee.findOne({ login_id: req.user.id });
+
     // Update fields
     if (status) complaint.status = status;
     if (remarks) complaint.remarks = remarks;
+
+    // If an employee updates the status to Assigned, In Progress or Resolved, assign it to them
+    // (This ensures they get credit in their stats)
+    if (employee) {
+      if (['Assigned', 'In Progress', 'Resolved'].includes(status)) {
+        complaint.assigned_to = employee._id;
+      }
+    }
 
     await complaint.save();
 
