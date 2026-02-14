@@ -1,38 +1,106 @@
 const Scheme = require("../models/Scheme");
+const { index } = require("../utils/pineconeClient");
+const { createEmbedding } = require("../utils/embedding");
 
 /**
- * CREATE SCHEME (ADMIN ONLY)
+ * @desc    Create new scheme (Admin only)
+ * @route   POST /api/schemes
+ * @access  Private (Admin)
  */
 exports.createScheme = async (req, res) => {
   try {
-    // role comes from JWT
+    // 🔐 1. Role check (from JWT middleware)
     if (req.user.role !== "Admin") {
       return res.status(403).json({
-        message: "Only admin can create schemes"
+        message: "Only admin can create schemes",
       });
     }
 
-    // prevent duplicates
-    const exists = await Scheme.findOne({ name: req.body.name });
+    const {
+      name,
+      category,
+      description,
+      eligibility,
+      benefits,
+      required_documents,
+    } = req.body;
+
+    // 🛑 2. Prevent duplicate scheme
+    const exists = await Scheme.findOne({ name });
     if (exists) {
       return res.status(400).json({
-        message: "Scheme already exists"
+        message: "Scheme already exists",
       });
     }
 
+    // 💾 3. Save scheme in MongoDB
     const scheme = await Scheme.create({
-      ...req.body,
-      created_by: req.user.id
+      name,
+      category,
+      description,
+      eligibility,
+      benefits,
+      required_documents,
+      created_by: req.user.id,
     });
 
+    console.log("✅ Scheme saved in MongoDB:", scheme.name);
+
+    // 🔥 4. Create RAG text for embedding
+    const ragText = `
+Scheme Name: ${scheme.name}
+Category: ${scheme.category}
+Description: ${scheme.description}
+Eligibility: ${scheme.eligibility || ""}
+Benefits: ${scheme.benefits || ""}
+Required Documents: ${scheme.required_documents?.join(", ") || ""
+      }
+`;
+
+    // 🧠 5. Generate embedding
+    const embedding = await createEmbedding(ragText);
+
+    if (!embedding || !Array.isArray(embedding) || embedding.length === 0) {
+      console.log("⚠️ Embedding failed. Skipping Pinecone.");
+      return res.status(201).json({
+        message: "Scheme created (without embedding)",
+        scheme,
+      });
+    }
+
+    console.log("✅ Embedding created. Dimension:", embedding.length);
+
+    // 🚀 6. Upsert to Pinecone (namespace: schemes)
+    await index.namespace("schemes").upsert({
+      records: [
+        {
+          id: scheme._id.toString(),
+          values: embedding,
+          metadata: {
+            name: scheme.name,
+            category: scheme.category,
+            text: ragText,
+            type: "scheme",
+          },
+        },
+      ]
+    });
+
+    console.log("🚀 Scheme upserted to Pinecone");
+
+    // 🎉 Final Response
     res.status(201).json({
       message: "Scheme created successfully",
-      scheme
+      scheme,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("❌ Create Scheme Error:", error);
+    res.status(500).json({
+      error: error.message,
+    });
   }
 };
+
 
 /**
  * UPDATE SCHEME (ADMIN ONLY)
