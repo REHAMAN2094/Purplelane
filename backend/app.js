@@ -23,6 +23,7 @@ app.use("/api/scheme-applications", require("./routes/SchemeApplication.routes")
 // Service routes
 app.use("/api/services", require("./routes/service.routes"));
 app.use("/api/service-applications", require("./routes/serviceApplication.routes"));
+app.use("/api/stats", require("./routes/stats.routes"));
 
 // chatbot routes
 app.use("/api/chatbot", require("./routes/chatbotRoutes"));

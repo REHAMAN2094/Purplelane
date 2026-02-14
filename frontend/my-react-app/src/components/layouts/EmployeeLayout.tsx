@@ -36,12 +36,17 @@ const sidebarLinks = [
 ];
 
 
+import { useEmployeeStats } from '@/hooks/useApi';
+
 const EmployeeLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState<Employee | null>(null);
+
+  // Fetch dashboard stats
+  const { data: stats } = useEmployeeStats();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -132,11 +137,11 @@ const EmployeeLayout: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-sidebar-accent rounded p-2 text-center">
-                <p className="font-bold text-sidebar-foreground">12</p>
+                <p className="font-bold text-sidebar-foreground">{stats?.pendingApplications || 0}</p>
                 <p className="text-sidebar-muted">Pending</p>
               </div>
               <div className="bg-sidebar-accent rounded p-2 text-center">
-                <p className="font-bold text-accent">45</p>
+                <p className="font-bold text-accent">{stats?.resolvedComplaints || 0}</p>
                 <p className="text-sidebar-muted">Verified</p>
               </div>
             </div>

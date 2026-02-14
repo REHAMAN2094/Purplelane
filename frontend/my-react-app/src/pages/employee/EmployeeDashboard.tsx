@@ -1,14 +1,25 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileCheck, MessageSquare, Clock, CheckCircle2 } from 'lucide-react';
+import { FileCheck, MessageSquare, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { useEmployeeStats } from '@/hooks/useApi';
 
 const EmployeeDashboard: React.FC = () => {
+  const { data: statsData, isLoading } = useEmployeeStats();
+
   const stats = [
-    { icon: Clock, label: 'Pending Applications', value: '12', color: 'text-warning', bg: 'bg-warning/10' },
-    { icon: FileCheck, label: 'Verified Today', value: '8', color: 'text-success', bg: 'bg-success/10' },
-    { icon: MessageSquare, label: 'Assigned Complaints', value: '5', color: 'text-info', bg: 'bg-info/10' },
-    { icon: CheckCircle2, label: 'Resolved', value: '23', color: 'text-accent', bg: 'bg-accent/10' },
+    { icon: Clock, label: 'Pending Applications', value: statsData?.pendingApplications?.toString() || '0', color: 'text-warning', bg: 'bg-warning/10' },
+    { icon: FileCheck, label: 'Verified Today', value: statsData?.verifiedToday?.toString() || '0', color: 'text-success', bg: 'bg-success/10' },
+    { icon: MessageSquare, label: 'Assigned Complaints', value: statsData?.assignedComplaints?.toString() || '0', color: 'text-info', bg: 'bg-info/10' },
+    { icon: CheckCircle2, label: 'Resolved', value: statsData?.resolvedComplaints?.toString() || '0', color: 'text-accent', bg: 'bg-accent/10' },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-8">

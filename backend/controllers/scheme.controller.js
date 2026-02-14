@@ -1,6 +1,7 @@
 const Scheme = require("../models/Scheme");
 const { index } = require("../utils/pineconeClient");
 const { createEmbedding } = require("../utils/embedding");
+const Citizen = require("../models/Citizen");
 
 /**
  * @desc    Create new scheme (Admin only)
@@ -194,14 +195,20 @@ exports.applyScheme = async (req, res) => {
       return res.status(400).json({ message: "scheme_id is required" });
     }
 
+    // Resolve Citizen profile
+    const citizen = await Citizen.findOne({ login_id: req.user.id });
+    if (!citizen) {
+      return res.status(404).json({ message: "Citizen profile not found" });
+    }
+
     // prevent duplicate application
     const alreadyApplied = await SchemeApplication.findOne({
       scheme_id,
-      citizen_id: req.user.id
+      citizen_id: citizen._id
     });
 
     if (alreadyApplied) {
-      console.log("Error: Already applied for this scheme", { scheme_id, citizen_id: req.user.id });
+      console.log("Error: Already applied for this scheme", { scheme_id, citizen_id: citizen._id });
       return res.status(400).json({
         message: "You have already applied for this scheme"
       });
@@ -221,7 +228,7 @@ exports.applyScheme = async (req, res) => {
 
     const application = await SchemeApplication.create({
       scheme_id,
-      citizen_id: req.user.id,
+      citizen_id: citizen._id,
       application_no: "SCH" + Date.now(),
       documents
     });
@@ -251,10 +258,18 @@ exports.updateSchemeStatus = async (req, res) => {
 
     const { status, remarks } = req.body;
 
-    if (!["Verified", "Rejected"].includes(status)) {
+    if (!["In Progress", "Resolved", "Rejected"].includes(status)) {
       return res.status(400).json({
-        message: "Invalid status"
+        message: "Invalid status. Must be one of: In Progress, Resolved, Rejected"
       });
+    }
+
+    // Find Employee associated with this Login
+    const Employee = require("../models/Employee");
+    const employee = await Employee.findOne({ login_id: req.user.id });
+
+    if (!employee) {
+      return res.status(404).json({ message: "Employee profile not found for this user" });
     }
 
     const application = await SchemeApplication.findByIdAndUpdate(
@@ -262,7 +277,7 @@ exports.updateSchemeStatus = async (req, res) => {
       {
         status,
         remarks,
-        verified_by: req.user.id
+        verified_by: employee._id
       },
       { new: true }
     );
@@ -288,8 +303,13 @@ exports.updateSchemeStatus = async (req, res) => {
  */
 exports.getMySchemeApplications = async (req, res) => {
   try {
+    const citizen = await Citizen.findOne({ login_id: req.user.id });
+    if (!citizen) {
+      return res.status(404).json({ message: "Citizen profile not found" });
+    }
+
     const applications = await SchemeApplication.find({
-      citizen_id: req.user.id
+      citizen_id: citizen._id
     })
       .populate("scheme_id", "name categories")
       .sort({ createdAt: -1 });
