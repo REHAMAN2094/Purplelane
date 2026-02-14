@@ -38,6 +38,7 @@ import { toast } from 'sonner';
 import { Complaint } from '@/types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { VoiceInput } from '@/components/ui/VoiceInput';
 
 const categories = [
   'Roads & Infrastructure',
@@ -210,7 +211,12 @@ const Complaints: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description">Description</Label>
+                  <VoiceInput
+                    onTranscript={(text) => setFormData({ ...formData, description: formData.description + " " + text })}
+                  />
+                </div>
                 <Textarea
                   id="description"
                   placeholder="Provide detailed information about the issue..."

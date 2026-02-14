@@ -28,11 +28,11 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       await login(formData);
       toast.success('Login successful!');
-      
+
       // Get user from localStorage to determine redirect
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
@@ -58,7 +58,7 @@ const Login: React.FC = () => {
       {/* Left Panel - Decorative */}
       <div className="hidden lg:flex lg:w-1/2 hero-gradient relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-        
+
         <div className="relative z-10 flex flex-col justify-center p-12 lg:p-16 text-white">
           <div className="mb-12">
             <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-6">
@@ -202,24 +202,39 @@ const Login: React.FC = () => {
                     Register as Citizen
                   </Link>
                 </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Employees must be created by Admin
+                </p>
               </div>
 
-              {/* Demo credentials */}
+              {/* Demo credentials - Now clickable */}
               <div className="mt-6 p-4 bg-muted/50 rounded-lg border">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Demo Credentials:</p>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Demo Credentials (Click to use):</p>
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="bg-background p-2 rounded border">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ username: 'admin', password: 'admin123' })}
+                    className="bg-background p-2 rounded border hover:border-primary hover:bg-primary/5 transition-colors text-left cursor-pointer"
+                  >
                     <p className="font-semibold text-primary">Admin</p>
                     <p className="text-muted-foreground">admin / admin123</p>
-                  </div>
-                  <div className="bg-background p-2 rounded border">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ username: 'employee', password: 'emp123' })}
+                    className="bg-background p-2 rounded border hover:border-accent hover:bg-accent/5 transition-colors text-left cursor-pointer"
+                  >
                     <p className="font-semibold text-accent">Employee</p>
                     <p className="text-muted-foreground">employee / emp123</p>
-                  </div>
-                  <div className="bg-background p-2 rounded border">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ username: 'citizen', password: 'cit123' })}
+                    className="bg-background p-2 rounded border hover:border-info hover:bg-info/5 transition-colors text-left cursor-pointer"
+                  >
                     <p className="font-semibold text-info">Citizen</p>
                     <p className="text-muted-foreground">citizen / cit123</p>
-                  </div>
+                  </button>
                 </div>
               </div>
             </CardContent>

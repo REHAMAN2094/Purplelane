@@ -11,6 +11,11 @@ const {
   applyService
 } = require("../controllers/citizen.controller");
 
+
+// Registration (public)
+router.post("/register", createCitizen);
+
+// Protected routes
 router.get("/:id", getCitizenById);
 router.put("/:id", updateCitizen);
 router.post("/apply-service", applyService);

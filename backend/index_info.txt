@@ -1,0 +1,24 @@
+{
+  "name": "village",
+  "dimension": 3072,
+  "metric": "cosine",
+  "host": "village-75naht1.svc.aped-4627-b74a.pinecone.io",
+  "deletionProtection": "disabled",
+  "spec": {
+    "serverless": {
+      "cloud": "aws",
+      "region": "us-east-1",
+      "readCapacity": {
+        "mode": "OnDemand",
+        "status": {
+          "state": "Ready"
+        }
+      }
+    }
+  },
+  "status": {
+    "ready": true,
+    "state": "Ready"
+  },
+  "vectorType": "dense"
+}

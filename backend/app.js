@@ -24,6 +24,9 @@ app.use("/api/scheme-applications", require("./routes/SchemeApplication.routes")
 app.use("/api/services", require("./routes/service.routes"));
 app.use("/api/service-applications", require("./routes/serviceApplication.routes"));
 
+// chatbot routes
+app.use("/api/chatbot", require("./routes/chatbotRoutes"));
+
 // Global error handler
 app.use((err, req, res, next) => {
     console.error("Global Error Handler Catch:", err);
