@@ -11,7 +11,6 @@ const {
   applyService
 } = require("../controllers/citizen.controller");
 
-router.post("/register", createCitizen);
 router.get("/:id", getCitizenById);
 router.put("/:id", updateCitizen);
 router.post("/apply-service", applyService);

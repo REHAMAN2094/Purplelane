@@ -1,4 +1,7 @@
 const Complaint = require("../models/Complaint");
+const { generateRAGResponse, translateWithSarvam } =
+  require("../services/aiService");
+
 
 /**
  * CREATE COMPLAINT (Citizen)
