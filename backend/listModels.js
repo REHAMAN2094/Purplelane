@@ -13,7 +13,9 @@ async function listModels() {
         if (data.models) {
             let output = "Available Models:\n";
             data.models.forEach(m => {
-                output += `- ${m.name} (Supported methods: ${m.supportedGenerationMethods})\n`;
+                if (m.name.includes("embed")) {
+                    output += `- ${m.name} (Supported methods: ${m.supportedGenerationMethods})\n`;
+                }
             });
             fs.writeFileSync('available_models.txt', output);
             console.log("Models written to available_models.txt");

@@ -1,28 +1,10 @@
-import ChatBot, { Button as RcbButton, useMessages, useTextArea } from "react-chatbotify";
+import ChatBot from "react-chatbotify";
 import api from "@/lib/api";
 import { useState } from "react";
 import { VoiceInput } from "@/components/ui/VoiceInput";
-
-// Wrapper to use hooks inside the ChatBot context
-const ChatbotVoiceInput = () => {
-    const { setTextAreaValue } = useTextArea();
-
-    return (
-        <VoiceInput
-            onTranscript={async (text, isFinal) => {
-                await setTextAreaValue(text);
-                if (isFinal && text.trim().length > 0) {
-                    setTimeout(() => {
-                        const sendButton = document.querySelector('.rcb-send-button') as HTMLDivElement;
-                        if (sendButton) {
-                            sendButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-                        }
-                    }, 200);
-                }
-            }}
-        />
-    );
-};
+import { Mic } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const ChatbotComponent = () => {
     const [history, setHistory] = useState<{ role: string; content: string }[]>([]);
@@ -30,14 +12,13 @@ const ChatbotComponent = () => {
     const flow = {
         start: {
             message: "Hello! I am your Digital Village assistant. How can I help you today?",
-            path: "user_input"
+            path: "process_input"
         },
-        user_input: {
+        process_input: {
+            transition: { duration: 0 },
+            chatDisabled: false,
             user: true,
-            path: "process_response"
-        },
-        process_response: {
-            message: async (params: any) => {
+            path: async (params: any) => {
                 const userMessage = params.userInput;
                 try {
                     const response = await api.post("/chatbot/chat", {
@@ -47,23 +28,21 @@ const ChatbotComponent = () => {
                     });
 
                     const aiReply = response.data.reply;
+                    params.injectMessage(aiReply);
 
+                    // Update history
                     setHistory(prev => [
                         ...prev,
                         { role: "user", content: userMessage },
                         { role: "model", content: aiReply }
                     ]);
 
-                    return aiReply;
-                } catch (error: any) {
-                    console.error("Chat Error:", error);
-                    if (error.response?.status === 429) {
-                        return "I've reached my daily limit for responses. Please try again tomorrow!";
-                    }
-                    return "I'm sorry, I'm having trouble connecting to my brain right now. Please try again later.";
+                    return "process_input";
+                } catch (error) {
+                    params.injectMessage("I'm sorry, I'm having trouble connecting to my brain right now. Please try again later.");
+                    return "process_input";
                 }
-            },
-            path: "user_input"
+            }
         }
     };
 
@@ -79,12 +58,6 @@ const ChatbotComponent = () => {
         },
         chatHistory: {
             storageKey: "pv_chat_history"
-        },
-        chatInput: {
-            buttons: [
-                <ChatbotVoiceInput key="voice-input" />,
-                RcbButton.SEND_MESSAGE_BUTTON
-            ]
         }
     };
 
@@ -106,6 +79,34 @@ const ChatbotComponent = () => {
                 flow={flow}
                 styles={styles}
             />
+            {/* Custom Voice Input Trigger */}
+            <div className="fixed bottom-24 right-6 z-[9999]">
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button size="icon" className="rounded-full h-12 w-12 shadow-lg bg-indigo-600 hover:bg-indigo-700">
+                            <Mic className="h-6 w-6 text-white" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2" side="left">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium px-2">Click to speak:</span>
+                            <VoiceInput
+                                onTranscript={(text) => {
+                                    // We need to find the chat input and set its value
+                                    const input = document.querySelector(".rcb-chat-input") as HTMLInputElement;
+                                    if (input) {
+                                        input.value = text;
+                                        // Trigger change event for react-chatbotify to pick it up
+                                        const event = new Event('input', { bubbles: true });
+                                        input.dispatchEvent(event);
+                                        input.focus();
+                                    }
+                                }}
+                            />
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            </div>
         </div>
     );
 };

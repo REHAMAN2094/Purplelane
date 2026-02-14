@@ -1,131 +1,98 @@
-import 'regenerator-runtime/runtime';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Mic, Square, Loader2 } from 'lucide-react';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { Button } from './button';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
 interface VoiceInputProps {
-    onTranscript: (text: string, isFinal?: boolean) => void;
+    onTranscript: (text: string) => void;
     className?: string;
 }
 
 export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscript, className }) => {
+    const [isRecording, setIsRecording] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
 
-    // 🔹 Hook from react-speech-recognition
-    const {
-        transcript,
-        listening,
-        resetTranscript,
-        browserSupportsSpeechRecognition
-    } = useSpeechRecognition();
-
-    // 🔹 Update live text as user speaks
-    useEffect(() => {
-        if (transcript) {
-            onTranscript(transcript, false);
-        }
-    }, [transcript, onTranscript]);
-
-    if (!browserSupportsSpeechRecognition) {
-        return null;
-    }
-
     const startRecording = async () => {
         try {
-            console.log('Starting Voice Library Listening...');
-            resetTranscript();
-
-            // 1. Request microphone access
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-            // 2. Start library-based live recognition
-            SpeechRecognition.startListening({
-                continuous: true,
-                language: 'en-IN'
-            });
-
-            // 3. Start MediaRecorder for high-quality backend pass (Gemini/Whisper-style)
-            const types = ['audio/webm', 'audio/mp4', 'audio/wav'];
-            const supportedType = types.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
-
-            const mediaRecorder = new MediaRecorder(stream, { mimeType: supportedType });
+            const mediaRecorder = new MediaRecorder(stream);
             mediaRecorderRef.current = mediaRecorder;
             chunksRef.current = [];
 
             mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) chunksRef.current.push(e.data);
+                if (e.data.size > 0) {
+                    chunksRef.current.push(e.data);
+                }
             };
 
             mediaRecorder.onstop = async () => {
-                console.log('Recording stopped. Processing high-quality audio...');
-                const audioBlob = new Blob(chunksRef.current, { type: supportedType });
-                await handleUpload(audioBlob, supportedType);
+                const audioBlob = new Blob(chunksRef.current, { type: 'audio/wav' });
+                await handleUpload(audioBlob);
                 stream.getTracks().forEach(track => track.stop());
             };
 
             mediaRecorder.start();
+            setIsRecording(true);
         } catch (err) {
-            console.error('Microphone Error:', err);
+            console.error('Error accessing microphone:', err);
             toast.error('Could not access microphone');
         }
     };
 
     const stopRecording = () => {
-        console.log('Stopping Listening...');
-        SpeechRecognition.stopListening();
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        if (mediaRecorderRef.current && isRecording) {
             mediaRecorderRef.current.stop();
+            setIsRecording(false);
         }
     };
 
-    const handleUpload = async (blob: Blob, mimetype: string) => {
+    const handleUpload = async (blob: Blob) => {
         setIsLoading(true);
-        const extension = mimetype.split('/')[1].split(';')[0] || 'webm';
         const formData = new FormData();
-        formData.append('file', blob, `recording.${extension}`);
+        formData.append('file', blob, 'recording.wav');
 
         try {
             const response = await api.post('/chatbot/stt', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            // Final high-quality transcript from Gemini replaces the interim one
-            onTranscript(response.data.transcript, true);
+            onTranscript(response.data.transcript);
         } catch (err) {
-            console.error('STT Processing Error:', err);
-            // Fallback: the library transcript is already in the input box
-            onTranscript(transcript, true);
-            toast.info('Session ended. Voice processed.');
+            console.error('STT Error:', err);
+            toast.error('Failed to process voice input');
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className={`flex items-center justify-center ${className || ''}`} style={{ minWidth: '40px' }}>
+        <div className={className}>
             {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
-            ) : listening ? (
-                <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); stopRecording(); }}
+                <Button variant="ghost" size="icon" disabled className="animate-pulse">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                </Button>
+            ) : isRecording ? (
+                <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={stopRecording}
                     type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600 animate-pulse border-none outline-none cursor-pointer p-0"
-                    title="Stop Listening"
+                    className="rounded-full animate-pulse"
                 >
-                    <Square size={14} />
-                </button>
+                    <Square className="h-4 w-4" />
+                </Button>
             ) : (
-                <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); startRecording(); }}
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={startRecording}
                     type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all border-none outline-none cursor-pointer p-0"
-                    title="Start Listening"
+                    className="rounded-full hover:bg-primary hover:text-white transition-all"
                 >
-                    <Mic size={18} />
-                </button>
+                    <Mic className="h-4 w-4" />
+                </Button>
             )}
         </div>
     );
