@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import ChatbotComponent from '@/pages/chatbot';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -183,8 +184,12 @@ const CitizenLayout: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Floating Chatbot */}
+      <ChatbotComponent />
     </div>
   );
 };
+
 
 export default CitizenLayout;
