@@ -260,16 +260,32 @@ export interface AdminDashboardStats {
   totalCitizens: number;
   totalSchemes: number;
   pendingApplications: number;
+  totalComplaints: number;
   resolvedComplaints: number;
   totalDepartments: number;
   totalEmployees: number;
+  schemesByDepartment?: { name: string; count: number }[];
+  complaintsGrouped?: { name: string; received: number; solved: number }[];
+  complaintsByCategory?: { name: string; value: number }[];
 }
 
 export interface EmployeeDashboardStats {
-  pendingApplications: number;
-  verifiedToday: number;
-  assignedComplaints: number;
-  resolvedComplaints: number;
+  schemes: {
+    pending: number;
+    verifiedToday: number;
+    inProgress: number;
+    resolved: number;
+  };
+  services: {
+    pending: number;
+    verifiedToday: number;
+    inProgress: number;
+    resolved: number;
+  };
+  complaints: {
+    assigned: number;
+    resolved: number;
+  };
 }
 
 export interface CitizenDashboardStats {

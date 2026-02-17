@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSchemes, useCreateScheme, useUpdateScheme } from '@/hooks/useApi';
+import { useSchemes, useCreateScheme, useUpdateScheme, useDeleteScheme } from '@/hooks/useApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Tag, Users, CheckCircle2, Edit } from 'lucide-react';
+import { Plus, FileText, Tag, Users, CheckCircle2, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scheme } from '@/types';
 
@@ -16,6 +16,7 @@ const Schemes: React.FC = () => {
     const { data: schemes, isLoading } = useSchemes();
     const createScheme = useCreateScheme();
     const updateScheme = useUpdateScheme();
+    const deleteScheme = useDeleteScheme();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingScheme, setEditingScheme] = useState<Scheme | null>(null);
 
@@ -115,6 +116,19 @@ const Schemes: React.FC = () => {
             application_steps: scheme.application_steps?.map(s => s.step_text).join('\n') || '',
         });
         setIsDialogOpen(true);
+    };
+
+    const handleDelete = (id: string, name: string) => {
+        if (window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+            deleteScheme.mutate(id, {
+                onSuccess: () => {
+                    toast.success('Scheme deleted successfully');
+                },
+                onError: (error: any) => {
+                    toast.error(error.response?.data?.message || 'Failed to delete scheme');
+                },
+            });
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -223,6 +237,14 @@ const Schemes: React.FC = () => {
                                         className="h-8 w-8"
                                     >
                                         <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDelete(scheme._id, scheme.name)}
+                                        className="h-8 w-8 text-destructive hover:text-destructive"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
                                     </Button>
                                     <FileText className="h-5 w-5 text-primary" />
                                 </div>

@@ -71,6 +71,19 @@ export const useUpdateScheme = () => {
   });
 };
 
+export const useDeleteScheme = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete<{ message: string }>(`/admin/scheme/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schemes'] });
+    },
+  });
+};
+
 // ============ SCHEME APPLICATIONS ============
 export const useMyApplications = () => {
   return useQuery({
@@ -361,6 +374,32 @@ export const useCreateDepartment = () => {
   });
 };
 
+export const useUpdateDepartment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreateDepartmentData> }) => {
+      const response = await api.put<{ message: string; department: Department }>(`/admin/department/${id}`, data);
+      return response.data.department;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+    },
+  });
+};
+
+export const useDeleteDepartment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete<{ message: string }>(`/admin/department/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+    },
+  });
+};
+
 // ============ EMPLOYEES ============
 export const useEmployees = () => {
   return useQuery({
@@ -391,6 +430,32 @@ export const useCreateEmployee = () => {
     mutationFn: async (data: CreateEmployeeData) => {
       const response = await api.post<{ message: string; employee: Employee }>('/admin/employee/create', data);
       return response.data.employee;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+  });
+};
+
+export const useUpdateEmployee = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreateEmployeeData> }) => {
+      const response = await api.put<{ message: string; employee: Employee }>(`/admin/employee/${id}`, data);
+      return response.data.employee;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+  });
+};
+
+export const useDeleteEmployee = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete<{ message: string }>(`/admin/employee/${id}`);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });

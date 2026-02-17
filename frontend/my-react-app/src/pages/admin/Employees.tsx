@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useEmployees, useCreateEmployee, useDepartments } from '@/hooks/useApi';
+import { useEmployees, useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useDepartments } from '@/hooks/useApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, User, Briefcase, Building2, Phone, Mail } from 'lucide-react';
+import { Plus, User, Briefcase, Building2, Phone, Mail, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Employees: React.FC = () => {
@@ -14,7 +14,10 @@ const Employees: React.FC = () => {
     const { data: employees, isLoading } = useEmployees();
     const { data: departments } = useDepartments();
     const createEmployee = useCreateEmployee();
+    const updateEmployee = useUpdateEmployee();
+    const deleteEmployee = useDeleteEmployee();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -35,26 +38,72 @@ const Employees: React.FC = () => {
             return;
         }
 
-        // Backend expects admin_id
-        createEmployee.mutate({ ...formData, admin_id: user.id }, {
-            onSuccess: () => {
-                toast.success('Employee created successfully');
-                setIsDialogOpen(false);
-                setFormData({
-                    name: '',
-                    designation: '',
-                    department_name: '',
-                    phone: '',
-                    email: '',
-                    role: 'Clerk',
-                    username: '',
-                    password: '',
-                });
-            },
-            onError: (error: any) => {
-                toast.error(error.response?.data?.message || 'Failed to create employee');
-            },
+        if (editingEmployee) {
+            // Update existing employee
+            updateEmployee.mutate({ id: editingEmployee._id, data: formData }, {
+                onSuccess: () => {
+                    toast.success('Employee updated successfully');
+                    resetForm();
+                },
+                onError: (error: any) => {
+                    toast.error(error.response?.data?.message || 'Failed to update employee');
+                },
+            });
+        } else {
+            // Backend expects admin_id
+            createEmployee.mutate({ ...formData, admin_id: user.id }, {
+                onSuccess: () => {
+                    toast.success('Employee created successfully');
+                    resetForm();
+                },
+                onError: (error: any) => {
+                    toast.error(error.response?.data?.message || 'Failed to create employee');
+                },
+            });
+        }
+    };
+
+    const resetForm = () => {
+        setIsDialogOpen(false);
+        setEditingEmployee(null);
+        setFormData({
+            name: '',
+            designation: '',
+            department_name: '',
+            phone: '',
+            email: '',
+            role: 'Clerk',
+            username: '',
+            password: '',
         });
+    };
+
+    const handleEdit = (emp: any) => {
+        setEditingEmployee(emp);
+        setFormData({
+            name: emp.name,
+            designation: emp.designation,
+            department_name: (emp.department_id && typeof emp.department_id === 'object') ? emp.department_id.name : '',
+            phone: emp.phone,
+            email: emp.email,
+            role: emp.role,
+            username: '',
+            password: '',
+        });
+        setIsDialogOpen(true);
+    };
+
+    const handleDelete = (id: string, name: string) => {
+        if (window.confirm(`Are you sure you want to delete employee "${name}"? This will also delete their login credentials.`)) {
+            deleteEmployee.mutate(id, {
+                onSuccess: () => {
+                    toast.success('Employee deleted successfully');
+                },
+                onError: (error: any) => {
+                    toast.error(error.response?.data?.message || 'Failed to delete employee');
+                },
+            });
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,9 +134,9 @@ const Employees: React.FC = () => {
                     </DialogTrigger>
                     <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                            <DialogTitle>Add New Employee</DialogTitle>
+                            <DialogTitle>{editingEmployee ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
                             <DialogDescription>
-                                Create a new employee account. They will be able to log in with these credentials.
+                                {editingEmployee ? 'Update employee details below.' : 'Create a new employee account. They will be able to log in with these credentials.'}
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -146,16 +195,32 @@ const Employees: React.FC = () => {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Username</label>
-                                <Input name="username" value={formData.username} onChange={handleChange} required />
+                                <Input
+                                    name="username"
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    required={!editingEmployee}
+                                    disabled={!!editingEmployee}
+                                    placeholder={editingEmployee ? 'Cannot change username' : ''}
+                                />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Password</label>
-                                <Input name="password" type="password" value={formData.password} onChange={handleChange} required />
+                                <label className="text-sm font-medium">Password {editingEmployee && '(leave blank to keep current)'}</label>
+                                <Input
+                                    name="password"
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required={!editingEmployee}
+                                />
                             </div>
 
-                            <Button type="submit" className="w-full" disabled={createEmployee.isPending}>
-                                {createEmployee.isPending ? 'Creating...' : 'Create Employee'}
+                            <Button type="submit" className="w-full" disabled={createEmployee.isPending || updateEmployee.isPending}>
+                                {editingEmployee
+                                    ? (updateEmployee.isPending ? 'Updating...' : 'Update Employee')
+                                    : (createEmployee.isPending ? 'Creating...' : 'Create Employee')
+                                }
                             </Button>
                         </form>
                     </DialogContent>
@@ -168,7 +233,25 @@ const Employees: React.FC = () => {
                         <Card key={emp._id} className="glass-card hover-lift">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-xl font-bold">{emp.name}</CardTitle>
-                                <User className="h-5 w-5 text-primary" />
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleEdit(emp)}
+                                        className="h-8 w-8"
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDelete(emp._id, emp.name)}
+                                        className="h-8 w-8 text-destructive hover:text-destructive"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                    <User className="h-5 w-5 text-primary" />
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-3">
@@ -178,7 +261,7 @@ const Employees: React.FC = () => {
                                     </div>
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <Building2 className="mr-2 h-4 w-4" />
-                                        {typeof emp.department_id === 'object' ? emp.department_id.name : 'Unknown Dept'}
+                                        {(emp.department_id && typeof emp.department_id === 'object') ? emp.department_id.name : 'Unknown Dept'}
                                     </div>
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <Phone className="mr-2 h-4 w-4" />
@@ -189,7 +272,7 @@ const Employees: React.FC = () => {
                                         {emp.email}
                                     </div>
                                     <div className="mt-2 text-xs bg-secondary/50 px-2 py-1 rounded inline-block">
-                                        Login: {typeof emp.login_id === 'object' ? emp.login_id.username : 'N/A'}
+                                        Login: {(emp.login_id && typeof emp.login_id === 'object') ? emp.login_id.username : 'N/A'}
                                     </div>
                                 </div>
                             </CardContent>

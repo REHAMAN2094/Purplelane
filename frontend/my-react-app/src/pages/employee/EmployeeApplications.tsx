@@ -97,20 +97,26 @@ const EmployeeApplications: React.FC = () => {
     // Get unique categories from all schemes
     const categories = Array.from(new Set(schemes?.flatMap((s) => s.categories) || []));
 
+    // Filter applications to only include those that belong to existing schemes
+    const validApplications = applications?.filter(app => {
+        const appSchemeId = typeof app.scheme_id === 'string' ? app.scheme_id : app.scheme_id?._id;
+        return schemes?.some(s => s._id === appSchemeId);
+    }) || [];
+
     // Get applications for selected scheme
     const schemeApplications = selectedScheme
         ? applications?.filter((app) => {
-            const schemeId = typeof app.scheme_id === 'string' ? app.scheme_id : app.scheme_id._id;
+            const schemeId = typeof app.scheme_id === 'string' ? app.scheme_id : app.scheme_id?._id;
             return schemeId === selectedScheme._id;
         }) || []
         : [];
 
-    // Calculate stats
+    // Calculate stats using valid applications only
     const stats = {
-        total: applications?.length || 0,
-        pending: applications?.filter((a) => a.status === 'Submitted').length || 0,
-        verified: applications?.filter((a) => a.status === 'Resolved').length || 0,
-        rejected: applications?.filter((a) => a.status === 'Rejected').length || 0,
+        total: validApplications.length,
+        pending: validApplications.filter((a) => a.status === 'Submitted').length,
+        verified: validApplications.filter((a) => a.status === 'Resolved').length,
+        rejected: validApplications.filter((a) => a.status === 'Rejected').length,
     };
 
     const handleUpdateStatus = () => {
@@ -253,7 +259,7 @@ const EmployeeApplications: React.FC = () => {
                     {filteredSchemes.length > 0 ? (
                         filteredSchemes.map((scheme) => {
                             const applicationsCount = applications?.filter((app) => {
-                                const schemeId = typeof app.scheme_id === 'string' ? app.scheme_id : app.scheme_id._id;
+                                const schemeId = typeof app.scheme_id === 'string' ? app.scheme_id : app.scheme_id?._id;
                                 return schemeId === scheme._id;
                             }).length || 0;
 
