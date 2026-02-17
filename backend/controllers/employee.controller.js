@@ -104,6 +104,28 @@ exports.getAllEmployees = async (req, res) => {
   }
 };
 
+/**
+ * GET ALL EMPLOYEES
+ */
+exports.getAllEmployees = async (req, res) => {
+  try {
+    const employees = await Employee.find()
+      .populate("department_id", "name description")
+      .populate("login_id", "username user_type")
+      .sort({ createdAt: -1 }); // Most recent first
+
+    res.status(200).json({
+      count: employees.length,
+      employees: employees
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+};
+
 exports.updateServiceStatus = async (req, res) => {
   try {
     if (req.user.role !== "Employee") {
@@ -170,6 +192,85 @@ exports.getProfile = async (req, res) => {
     }
 
     res.status(200).json(employee);
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+};
+
+/**
+ * UPDATE EMPLOYEE
+ */
+exports.updateEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, designation, department_name, phone, email, role } = req.body;
+
+    // Find department by name if department_name is provided
+    let updateData = { name, designation, phone, email, role };
+
+    if (department_name) {
+      const department = await Department.findOne({ name: department_name });
+      if (!department) {
+        return res.status(404).json({
+          message: "Department does not exist"
+        });
+      }
+      updateData.department_id = department._id;
+    }
+
+    const employee = await Employee.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    )
+      .populate("department_id", "name description")
+      .populate("login_id", "username user_type");
+
+    if (!employee) {
+      return res.status(404).json({
+        message: "Employee not found"
+      });
+    }
+
+    res.status(200).json({
+      message: "Employee updated successfully",
+      employee
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+};
+
+/**
+ * DELETE EMPLOYEE
+ */
+exports.deleteEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const employee = await Employee.findById(id);
+
+    if (!employee) {
+      return res.status(404).json({
+        message: "Employee not found"
+      });
+    }
+
+    // Delete associated login
+    if (employee.login_id) {
+      await Login.findByIdAndDelete(employee.login_id);
+    }
+
+    // Delete employee
+    await Employee.findByIdAndDelete(id);
+
+    res.status(200).json({
+      message: "Employee deleted successfully"
+    });
   } catch (error) {
     res.status(500).json({
       error: error.message

@@ -91,3 +91,59 @@ exports.getDepartmentById = async (req, res) => {
     });
   }
 };
+
+/**
+ * UPDATE DEPARTMENT
+ */
+exports.updateDepartment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, contact_email, contact_phone } = req.body;
+
+    const department = await Department.findByIdAndUpdate(
+      id,
+      { name, description, contact_email, contact_phone },
+      { new: true }
+    ).populate("created_by", "username user_type");
+
+    if (!department) {
+      return res.status(404).json({
+        message: "Department not found"
+      });
+    }
+
+    res.status(200).json({
+      message: "Department updated successfully",
+      department
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+};
+
+/**
+ * DELETE DEPARTMENT
+ */
+exports.deleteDepartment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const department = await Department.findByIdAndDelete(id);
+
+    if (!department) {
+      return res.status(404).json({
+        message: "Department not found"
+      });
+    }
+
+    res.status(200).json({
+      message: "Department deleted successfully"
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+};

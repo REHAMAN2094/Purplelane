@@ -17,11 +17,15 @@ exports.createScheme = async (req, res) => {
 
     const {
       name,
-      category,
+      state,
+      categories,
+      short_description,
       description,
-      eligibility,
       benefits,
+      eligibility_criteria,
+      target_group,
       required_documents,
+      application_steps,
     } = req.body;
 
     // 🛑 2. Prevent duplicate scheme
@@ -35,11 +39,15 @@ exports.createScheme = async (req, res) => {
     // 💾 3. Save scheme in MongoDB
     const scheme = await Scheme.create({
       name,
-      category,
+      state,
+      categories,
+      short_description,
       description,
-      eligibility,
       benefits,
+      eligibility_criteria,
+      target_group,
       required_documents,
+      application_steps,
       created_by: req.user.id,
     });
 
@@ -48,12 +56,13 @@ exports.createScheme = async (req, res) => {
     // 🔥 4. Create RAG text for embedding
     const ragText = `
 Scheme Name: ${scheme.name}
-Category: ${scheme.category}
+Categories: ${scheme.categories?.join(", ") || ""}
 Description: ${scheme.description}
-Eligibility: ${scheme.eligibility || ""}
+Short Description: ${scheme.short_description || ""}
+Eligibility: ${scheme.eligibility_criteria?.join(", ") || ""}
 Benefits: ${scheme.benefits || ""}
-Required Documents: ${scheme.required_documents?.join(", ") || ""
-      }
+Target Group: ${scheme.target_group || ""}
+Required Documents: ${scheme.required_documents?.join(", ") || ""}
 `;
 
     // 🧠 5. Generate embedding
@@ -70,22 +79,24 @@ Required Documents: ${scheme.required_documents?.join(", ") || ""
     console.log("✅ Embedding created. Dimension:", embedding.length);
 
     // 🚀 6. Upsert to Pinecone (namespace: schemes)
-    await index.namespace("schemes").upsert({
-      records: [
+    try {
+      await index.namespace("schemes").upsert([
         {
           id: scheme._id.toString(),
           values: embedding,
           metadata: {
             name: scheme.name,
-            category: scheme.category,
+            categories: scheme.categories,
             text: ragText,
             type: "scheme",
           },
         },
-      ]
-    });
-
-    console.log("🚀 Scheme upserted to Pinecone");
+      ]);
+      console.log("🚀 Scheme upserted to Pinecone");
+    } catch (pineconeError) {
+      console.error("⚠️ Pinecone upsert failed:", pineconeError.message);
+      // We don't return 500 here because the scheme is already saved in MongoDB
+    }
 
     // 🎉 Final Response
     res.status(201).json({
@@ -127,6 +138,41 @@ exports.updateScheme = async (req, res) => {
     res.status(200).json({
       message: "Scheme updated successfully",
       scheme
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * DELETE SCHEME (ADMIN ONLY)
+ */
+exports.deleteScheme = async (req, res) => {
+  try {
+    if (req.user.role !== "Admin") {
+      return res.status(403).json({
+        message: "Only admin can delete schemes"
+      });
+    }
+
+    const scheme = await Scheme.findByIdAndDelete(req.params.id);
+
+    if (!scheme) {
+      return res.status(404).json({
+        message: "Scheme not found"
+      });
+    }
+
+    // Delete from Pinecone as well
+    try {
+      await index.namespace("schemes").deleteOne(req.params.id);
+      console.log("🗑️ Scheme deleted from Pinecone");
+    } catch (pineconeError) {
+      console.log("⚠️ Pinecone deletion failed:", pineconeError.message);
+    }
+
+    res.status(200).json({
+      message: "Scheme deleted successfully"
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

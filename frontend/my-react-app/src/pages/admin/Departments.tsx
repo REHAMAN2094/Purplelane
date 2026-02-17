@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useDepartments, useCreateDepartment } from '@/hooks/useApi';
+import { useDepartments, useCreateDepartment, useUpdateDepartment, useDeleteDepartment } from '@/hooks/useApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Building2, Phone, Mail, User } from 'lucide-react';
+import { Plus, Building2, Phone, Mail, User, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +14,10 @@ const Departments: React.FC = () => {
     const { user } = useAuth();
     const { data: departments, isLoading } = useDepartments();
     const createDepartment = useCreateDepartment();
+    const updateDepartment = useUpdateDepartment();
+    const deleteDepartment = useDeleteDepartment();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingDepartment, setEditingDepartment] = useState<any | null>(null);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -29,21 +32,63 @@ const Departments: React.FC = () => {
             return;
         }
 
-        createDepartment.mutate({ ...formData, admin_id: user.id }, {
-            onSuccess: () => {
-                toast.success('Department created successfully');
-                setIsDialogOpen(false);
-                setFormData({
-                    name: '',
-                    description: '',
-                    contact_email: '',
-                    contact_phone: '',
-                });
-            },
-            onError: (error: any) => {
-                toast.error(error.response?.data?.message || 'Failed to create department');
-            },
+        if (editingDepartment) {
+            // Update existing department
+            updateDepartment.mutate({ id: editingDepartment._id, data: formData }, {
+                onSuccess: () => {
+                    toast.success('Department updated successfully');
+                    resetForm();
+                },
+                onError: (error: any) => {
+                    toast.error(error.response?.data?.message || 'Failed to update department');
+                },
+            });
+        } else {
+            createDepartment.mutate({ ...formData, admin_id: user.id }, {
+                onSuccess: () => {
+                    toast.success('Department created successfully');
+                    resetForm();
+                },
+                onError: (error: any) => {
+                    toast.error(error.response?.data?.message || 'Failed to create department');
+                },
+            });
+        }
+    };
+
+    const resetForm = () => {
+        setIsDialogOpen(false);
+        setEditingDepartment(null);
+        setFormData({
+            name: '',
+            description: '',
+            contact_email: '',
+            contact_phone: '',
         });
+    };
+
+    const handleEdit = (dept: any) => {
+        setEditingDepartment(dept);
+        setFormData({
+            name: dept.name,
+            description: dept.description,
+            contact_email: dept.contact_email,
+            contact_phone: dept.contact_phone,
+        });
+        setIsDialogOpen(true);
+    };
+
+    const handleDelete = (id: string, name: string) => {
+        if (window.confirm(`Are you sure you want to delete department "${name}"? This action cannot be undone.`)) {
+            deleteDepartment.mutate(id, {
+                onSuccess: () => {
+                    toast.success('Department deleted successfully');
+                },
+                onError: (error: any) => {
+                    toast.error(error.response?.data?.message || 'Failed to delete department');
+                },
+            });
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -70,9 +115,9 @@ const Departments: React.FC = () => {
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Add New Department</DialogTitle>
+                            <DialogTitle>{editingDepartment ? 'Edit Department' : 'Add New Department'}</DialogTitle>
                             <DialogDescription>
-                                Create a new department for the village administration.
+                                {editingDepartment ? 'Update department details below.' : 'Create a new department for the village administration.'}
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -119,8 +164,11 @@ const Departments: React.FC = () => {
                                     />
                                 </div>
                             </div>
-                            <Button type="submit" className="w-full" disabled={createDepartment.isPending}>
-                                {createDepartment.isPending ? 'Creating...' : 'Create Department'}
+                            <Button type="submit" className="w-full" disabled={createDepartment.isPending || updateDepartment.isPending}>
+                                {editingDepartment
+                                    ? (updateDepartment.isPending ? 'Updating...' : 'Update Department')
+                                    : (createDepartment.isPending ? 'Creating...' : 'Create Department')
+                                }
                             </Button>
                         </form>
                     </DialogContent>
@@ -133,7 +181,25 @@ const Departments: React.FC = () => {
                         <Card key={dept._id} className="glass-card hover-lift">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-xl font-bold">{dept.name}</CardTitle>
-                                <Building2 className="h-5 w-5 text-primary" />
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleEdit(dept)}
+                                        className="h-8 w-8"
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDelete(dept._id, dept.name)}
+                                        className="h-8 w-8 text-destructive hover:text-destructive"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                    <Building2 className="h-5 w-5 text-primary" />
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
