@@ -67,7 +67,7 @@ const SchemeSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-module.exports = mongoose.model("Scheme", SchemeSchema);
+module.exports = mongoose.models.Scheme || mongoose.model("Scheme", SchemeSchema);
 
 /*{
   "name": "Thalliki Vandanam Scheme",
