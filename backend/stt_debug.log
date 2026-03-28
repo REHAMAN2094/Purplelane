@@ -1,0 +1,13 @@
+{
+  "time": "2026-02-17T10:49:06.686Z",
+  "message": "Request failed with status code 400",
+  "data": {
+    "error": {
+      "message": "Audio file having duration greater than 30 seconds is not supported, use batch API for longer audios",
+      "code": "invalid_request_error",
+      "request_id": "20260217_b60caf26-2c44-4651-81f2-b0b2b2841f8e"
+    }
+  },
+  "status": 400
+}
+---
