@@ -1,12 +1,16 @@
 const Citizen = require("../models/Citizen");
 const Login = require("../models/Login");
 const bcrypt = require("bcryptjs");
+const axios = require("axios"); // ✅ ADDED
+const BOT_TOKEN = process.env.BOT_TOKEN; // ✅ ADDED
 
 /**
  * CREATE CITIZEN (Registration)
  */
 exports.createCitizen = async (req, res) => {
   try {
+       console.log("DATA:", req.body); // ✅ DEBUG
+
     const {
       name,
       gender,
@@ -16,7 +20,8 @@ exports.createCitizen = async (req, res) => {
       address,
       identity,
       username,
-      password
+      password,
+      telegramId // ✅ ADDED
     } = req.body;
 
     // ❌ Check duplicate username
@@ -27,7 +32,7 @@ exports.createCitizen = async (req, res) => {
       });
     }
 
-    // ❌ Check duplicate Aadhaar (optional but recommended)
+    // ❌ Check duplicate Aadhaar
     if (identity?.aadhar) {
       const existingCitizen = await Citizen.findOne({
         "identity.aadhar": identity.aadhar
@@ -59,8 +64,17 @@ exports.createCitizen = async (req, res) => {
       email,
       address,
       identity,
-      login_id: login._id
+      login_id: login._id,
+      telegramId // ✅ SAVED
     });
+
+    // ✅ TELEGRAM MESSAGE
+    if (telegramId) {
+      await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        chat_id: telegramId,
+        text: `👋 Welcome to Purplelane!\nDear ${name}, your registration was successful.`
+      });
+    }
 
     res.status(201).json({
       message: "Citizen registered successfully",
@@ -68,6 +82,7 @@ exports.createCitizen = async (req, res) => {
     });
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       error: error.message
     });
@@ -101,7 +116,6 @@ exports.getCitizenById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Search by both internal _id and login_id
     const citizen = await Citizen.findOne({
       $or: [
         { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null },
@@ -130,7 +144,6 @@ exports.updateCitizen = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // First find the citizen to ensure we have the right document
     const citizenCheck = await Citizen.findOne({
       $or: [
         { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null },
@@ -176,7 +189,6 @@ exports.deleteCitizen = async (req, res) => {
       });
     }
 
-    // Also delete login
     await Login.findByIdAndDelete(citizen.login_id);
 
     res.status(200).json({
@@ -188,7 +200,6 @@ exports.deleteCitizen = async (req, res) => {
     });
   }
 };
-
 
 exports.applyService = async (req, res) => {
   const application = await ServiceApplication.create({

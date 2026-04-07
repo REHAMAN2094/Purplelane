@@ -1,4 +1,6 @@
 const Complaint = require("../models/Complaint");
+const Citizen = require("../models/Citizen"); // ✅ IMPORTANT
+const sendTelegramNotification = require("../services/notificationService");
 
 /**
  * CREATE COMPLAINT (Citizen)
@@ -26,36 +28,52 @@ exports.createComplaint = async (req, res) => {
       });
     }
 
+    const complaintNo = "CMP" + Date.now();
+
     const complaint = await Complaint.create({
-      citizen_id: req.user.id, // from JWT
+      citizen_id: req.user.id,
       title,
       description,
       category,
       priority,
       location,
       village,
-      complaint_no: "CMP" + Date.now(),
+      complaint_no: complaintNo,
       attachments
     });
+
+    // ✅ FETCH TELEGRAM ID FROM DB (IMPORTANT FIX)
+    const citizen = await Citizen.findById(req.user.id);
+    const telegramId = citizen?.telegramId;
+
+    console.log("Telegram ID:", telegramId); // debug
+
+    // ✅ SEND TELEGRAM MESSAGE
+    if (telegramId) {
+      await sendTelegramNotification(
+        telegramId,
+        `📄 *Complaint Submitted*\n\nYour complaint *"${title}"* (${complaintNo}) has been submitted successfully.`
+      );
+    }
 
     res.status(201).json({
       message: "Complaint submitted successfully",
       complaint_id: complaint._id,
       complaint_no: complaint.complaint_no
     });
+
   } catch (error) {
+    console.log("Create Complaint Error:", error);
     res.status(500).json({ error: error.message });
   }
 };
 
 /**
- * GET COMPLAINT DETAILS (WITHOUT IMAGE DATA)
+ * GET COMPLAINT DETAILS
  */
 exports.getComplaintById = async (req, res) => {
   try {
-    const complaint = await Complaint.findById(req.params.id).select(
-      "-attachments.data"
-    );
+    const complaint = await Complaint.findById(req.params.id).select("-attachments.data");
 
     if (!complaint) {
       return res.status(404).json({ message: "Complaint not found" });
@@ -82,6 +100,7 @@ exports.getComplaintImage = async (req, res) => {
 
     res.set("Content-Type", image.file_type);
     res.send(image.data);
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -89,19 +108,17 @@ exports.getComplaintImage = async (req, res) => {
 
 /**
  * GET ALL COMPLAINTS
- * (Images excluded for performance)
  */
 exports.getAllComplaints = async (req, res) => {
   try {
     let filter = {};
 
-    // Citizen sees only own complaints
     if (req.user.role === "Citizen") {
       filter.citizen_id = req.user.id;
     }
 
     const complaints = await Complaint.find(filter)
-      .select("-attachments.data") // ❌ exclude image bytes
+      .select("-attachments.data")
       .populate("citizen_id", "name")
       .populate("department_id", "name")
       .sort({ createdAt: -1 });
@@ -111,18 +128,17 @@ exports.getAllComplaints = async (req, res) => {
       message: "Complaints retrieved successfully",
       data: complaints
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message,
-      error: error.message
+      message: error.message
     });
   }
 };
 
-
 /**
- * GET COMPLAINT ATTACHMENT BY INDEX
+ * GET COMPLAINT ATTACHMENT
  */
 exports.getComplaintAttachment = async (req, res) => {
   try {
@@ -149,19 +165,19 @@ exports.getComplaintAttachment = async (req, res) => {
 };
 
 /**
- * UPDATE COMPLAINT STATUS (Employee/Admin)
+ * UPDATE COMPLAINT STATUS
  */
 exports.updateComplaintStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, remarks } = req.body;
 
-    // Validate status
     const validStatuses = ['Submitted', 'In Progress', 'Resolved'];
+
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status. Must be one of: ' + validStatuses.join(', ')
+        message: 'Invalid status'
       });
     }
 
@@ -174,7 +190,6 @@ exports.updateComplaintStatus = async (req, res) => {
       });
     }
 
-    // Update fields
     if (status) complaint.status = status;
     if (remarks) complaint.remarks = remarks;
 
@@ -193,4 +208,3 @@ exports.updateComplaintStatus = async (req, res) => {
     });
   }
 };
-

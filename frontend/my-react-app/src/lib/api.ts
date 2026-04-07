@@ -1,10 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-// API base URL - change this to match your backend
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// ✅ API base URL (fixed fallback)
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-
-// Create axios instance
+// ✅ Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -12,13 +12,16 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add JWT token to all requests
+// ✅ Request interceptor - Add JWT token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('auth_token');
-    if (token && config.headers) {
-      config.headers.set('Authorization', `Bearer ${token}`);
+
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers['Authorization'] = `Bearer ${token}`; // ✅ FIXED (set → direct assign)
     }
+
     return config;
   },
   (error) => {
@@ -26,16 +29,14 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle global errors
+// ✅ Response interceptor - Handle global errors
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - clear storage and redirect to login
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
 
-      // Only redirect if not already on login page
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
@@ -46,7 +47,7 @@ api.interceptors.response.use(
 
 export default api;
 
-// Helper function for multipart/form-data requests (file uploads)
+// ✅ Multipart instance (file uploads)
 export const apiMultipart = axios.create({
   baseURL: API_BASE_URL,
 });
@@ -54,9 +55,12 @@ export const apiMultipart = axios.create({
 apiMultipart.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('auth_token');
-    if (token && config.headers) {
-      config.headers.set('Authorization', `Bearer ${token}`);
+
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers['Authorization'] = `Bearer ${token}`; // ✅ FIXED
     }
+
     return config;
   },
   (error) => {
@@ -70,6 +74,7 @@ apiMultipart.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
+
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }

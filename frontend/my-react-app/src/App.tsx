@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
+// ✅ Import Forgot Password
+import ForgotPassword from "./pages/auth/ForgotPassword";
+
 // Auth Pages
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -29,7 +32,6 @@ import EmployeeComplaints from "@/pages/employee/EmployeeComplaints";
 import EmployeeServices from "@/pages/employee/EmployeeServices";
 import EmployeeFeedback from "@/pages/employee/EmployeeFeedback";
 
-
 // Citizen Pages
 import CitizenHome from "@/pages/citizen/CitizenHome";
 import SchemesGallery from "@/pages/citizen/SchemesGallery";
@@ -48,18 +50,25 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+
           <Routes>
-            {/* Public Routes */}
+            {/* ✅ Public Routes */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            
+            {/* ✅ Forgot Password Route (FIXED POSITION) */}
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <AdminLayout />
-              </ProtectedRoute>
-            }>
+            {/* ================= ADMIN ================= */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={['Admin']}>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<AdminDashboard />} />
               <Route path="departments" element={<Departments />} />
               <Route path="employees" element={<Employees />} />
@@ -67,12 +76,15 @@ const App = () => (
               <Route path="services" element={<AdminServices />} />
             </Route>
 
-            {/* Employee Routes */}
-            <Route path="/employee" element={
-              <ProtectedRoute allowedRoles={['Employee']}>
-                <EmployeeLayout />
-              </ProtectedRoute>
-            }>
+            {/* ================= EMPLOYEE ================= */}
+            <Route
+              path="/employee"
+              element={
+                <ProtectedRoute allowedRoles={['Employee']}>
+                  <EmployeeLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<EmployeeDashboard />} />
               <Route path="applications" element={<EmployeeApplications />} />
               <Route path="complaints" element={<EmployeeComplaints />} />
@@ -80,13 +92,15 @@ const App = () => (
               <Route path="feedback" element={<EmployeeFeedback />} />
             </Route>
 
-
-            {/* Citizen Routes */}
-            <Route path="/citizen" element={
-              <ProtectedRoute allowedRoles={['Citizen']}>
-                <CitizenLayout />
-              </ProtectedRoute>
-            }>
+            {/* ================= CITIZEN ================= */}
+            <Route
+              path="/citizen"
+              element={
+                <ProtectedRoute allowedRoles={['Citizen']}>
+                  <CitizenLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<CitizenHome />} />
               <Route path="schemes" element={<SchemesGallery />} />
               <Route path="services" element={<Services />} />
@@ -94,8 +108,10 @@ const App = () => (
               <Route path="complaints" element={<Complaints />} />
             </Route>
 
+            {/* ✅ 404 Page */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+
         </TooltipProvider>
       </AuthProvider>
     </BrowserRouter>

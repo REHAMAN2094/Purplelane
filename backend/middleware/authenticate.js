@@ -19,22 +19,20 @@ module.exports = (req, res, next) => {
       });
     }
 
-    console.log("Token extracted:", "Present");
+    console.log("Token extracted:", token);
 
-
-
-
+    // ✅ VERIFY TOKEN
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = {
-      id: decoded.id,
-      role: decoded.role
-    };
+    // ✅ attach user info
+    req.user = decoded;
 
-    next();
+    next(); // 👉 VERY IMPORTANT
+
   } catch (error) {
+    console.log("JWT Error:", error.message);
     return res.status(401).json({
-      message: "Invalid or expired token"
+      message: "Invalid token"
     });
   }
 };
